@@ -1055,5 +1055,16 @@ body:not(.home) .header-detail-search{
 }
 </style>
 
+
+<style id="pocalogu-home-only-search-final">
+/* 詳細検索アイコンはHOME画面だけ残す */
+[data-open-search]{
+  display:none !important;
+}
+#home [data-open-search].home-hot.search{
+  display:block !important;
+}
+</style>
+
 </body>
 </html>
