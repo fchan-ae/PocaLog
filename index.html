@@ -217,47 +217,27 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}button:active{tr
 .dict-visual-item.dragging{opacity:.55}.dict-visual-item.drag-over{border-top:1px solid #777b84}
 </style>
 
-<style id="home-lower-tvxq-scroll-only">
-/* HOME下段バインダーのみ：カード登録画面のメンバータブと同じ横スクロール */
-.home-lower-scroll{
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  -webkit-overflow-scrolling:touch;
-  touch-action:pan-x;
-  scrollbar-width:none;
+<style id="pocalogu-home-male-row-final">
+/* HOME：男子バインダー段は完全に空欄（iPhoneを含む全幅） */
+#home::after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:348px;
+  width:393px;
+  height:177px;
+  background:#08080a;
+  z-index:4;
+  pointer-events:none;
 }
-.home-lower-scroll::-webkit-scrollbar{display:none}
-.home-lower-inner{
-  width:370px!important;
-  height:176px!important;
-  flex:0 0 370px!important;
-  position:relative;
-  background:none!important;
+/* 横スライド領域そのものを無効化 */
+#home .home-lower-scroll,
+#home .home-lower-inner,
+#home .home-lower-group{
+  display:none !important;
+  overflow:hidden !important;
+  touch-action:none !important;
 }
-.home-lower-inner > img.home-lower-svg{
-  position:absolute!important;
-  left:0!important;
-  top:0!important;
-  width:370px!important;
-  height:176px!important;
-  max-width:none!important;
-  pointer-events:none!important;
-  object-fit:fill!important;
-}
-.home-lower-group{
-  position:absolute!important;
-  top:0!important;
-  height:176px!important;
-  width:58px!important;
-  background:transparent!important;
-  border:0!important;
-}
-.home-lower-group.g5{left:-30px!important}
-.home-lower-group.g6{left:38px!important}
-.home-lower-group.g7{left:106px!important}
-.home-lower-group.g8{left:174px!important}
-.home-lower-group.g9{left:242px!important}
-.home-lower-group.g10{left:310px!important}
 </style>
 </head>
 <body>
@@ -267,7 +247,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}button:active{tr
     <div class="home-profile-title" id="homeProfileTitle"><span class="nickname">MY</span>&nbsp;PocaLog</div>
     <button class="home-hot logo" data-nav="home" aria-label="HOMEへ戻る"></button><button class="home-hot search" data-open-search aria-label="詳細検索"></button>
     <button class="home-hot g1" data-group="aespa"></button><button class="home-hot g2" data-group="h2h"></button><button class="home-hot g3" data-group="redvelvet"></button><button class="home-hot g4" data-group="snsd"></button>
-    <button class="home-hot g5" data-group="riize"></button><button class="home-hot g6" data-group="nct"></button><button class="home-hot g7" data-group="exo"></button><button class="home-hot g8" data-group="shinee"></button><button class="home-hot g9" data-group="sj"></button><button class="home-hot g10" data-group="tvxq"></button>
     <button class="home-hot wish" data-nav="wishlist"></button>
     <div class="home-wishlist-live" id="homeWishlistLive"></div><button class="home-nav-hot n1" data-nav="home" aria-label="HOME"></button><button class="home-nav-hot n2" data-nav="wishlist" aria-label="Wish"></button><button class="home-nav-hot n3" data-nav="add" aria-label="Add"></button><button class="home-nav-hot n4" data-nav="favorites" aria-label="Like"></button><button class="home-nav-hot n5" data-nav="dictionary" aria-label="Data"></button>
   </section>
@@ -413,7 +392,7 @@ function profileIsUsed(kind,value,currentValue){
  return list.includes(key);
 }
 function render(){
- setupHomeFullBgVar();setupHomeLogoVar();setupHomeLowerStrip();
+ setupHomeFullBgVar();setupHomeLogoVar();
  renderHomeWishlist();
  const nick=(db.profile?.nickname||'').trim(); const homeTitle=document.getElementById('homeProfileTitle'); if(homeTitle)homeTitle.innerHTML=`<span class="nickname">${esc(nick||'MY')}</span>&nbsp;PocaLog`;
  setNavs(state.screen==='home'?'home':state.screen==='wishlist'?'wishlist':state.screen==='favorites'?'favorites':state.screen==='dictionary'||state.screen==='dictEditor'||state.screen==='myPage'||state.screen==='encyclopedia'?'dictionary':'');
@@ -731,5 +710,94 @@ document.addEventListener('dragend',()=>{document.querySelectorAll('.dict-visual
 }
 </style>
 
+
+<style id="pocalogu-iphone-flip-final">
+/* iPhone Safari：表裏を同一フレームの実寸で回転 */
+.list-flip-photo{
+  position:relative !important;
+  width:100% !important;
+  overflow:hidden !important;
+  perspective:1000px !important;
+  -webkit-perspective:1000px !important;
+  transform-style:preserve-3d !important;
+  -webkit-transform-style:preserve-3d !important;
+  isolation:isolate !important;
+}
+.list-flip-photo.square{aspect-ratio:1 / 1 !important;}
+.list-flip-photo .mini-flip{
+  position:absolute !important;
+  left:0 !important; top:0 !important; right:0 !important; bottom:0 !important;
+  width:100% !important; height:100% !important;
+  min-width:100% !important; min-height:100% !important;
+  margin:0 !important; padding:0 !important;
+  transform-origin:50% 50% !important;
+  transform-style:preserve-3d !important;
+  -webkit-transform-style:preserve-3d !important;
+  transition:transform .45s ease !important;
+  -webkit-transition:-webkit-transform .45s ease !important;
+}
+.list-flip-photo.flipped .mini-flip{
+  transform:rotateY(180deg) !important;
+  -webkit-transform:rotateY(180deg) !important;
+}
+.list-flip-face{
+  position:absolute !important;
+  left:0 !important; top:0 !important; right:0 !important; bottom:0 !important;
+  width:100% !important; height:100% !important;
+  min-width:100% !important; min-height:100% !important;
+  margin:0 !important; padding:0 !important;
+  display:block !important;
+  overflow:hidden !important;
+  backface-visibility:hidden !important;
+  -webkit-backface-visibility:hidden !important;
+  transform-origin:50% 50% !important;
+}
+.list-flip-face.front{transform:rotateY(0deg) !important;-webkit-transform:rotateY(0deg) !important;}
+.list-flip-face.back{transform:rotateY(180deg) !important;-webkit-transform:rotateY(180deg) !important;}
+.list-flip-face img{
+  position:absolute !important;
+  left:0 !important; top:0 !important;
+  width:100% !important; height:100% !important;
+  min-width:100% !important; min-height:100% !important;
+  max-width:none !important; max-height:none !important;
+  margin:0 !important; padding:0 !important;
+  display:block !important;
+  object-fit:cover !important;
+  object-position:center !important;
+}
+</style>
+
+<script id="pocalogu-iphone-flip-sync">
+(function(){
+  function syncFlip(photo){
+    if(!photo) return;
+    const w=photo.clientWidth, h=photo.clientHeight;
+    if(!w || !h) return;
+    const mini=photo.querySelector('.mini-flip');
+    const faces=photo.querySelectorAll('.list-flip-face');
+    if(mini){ mini.style.width=w+'px'; mini.style.height=h+'px'; }
+    faces.forEach(function(face){
+      face.style.width=w+'px'; face.style.height=h+'px';
+      const img=face.querySelector('img');
+      if(img){ img.style.width=w+'px'; img.style.height=h+'px'; }
+    });
+  }
+  function syncAll(){ document.querySelectorAll('[data-list-flip]').forEach(syncFlip); }
+  document.addEventListener('DOMContentLoaded', function(){
+    syncAll();
+    document.querySelectorAll('[data-list-flip] img').forEach(function(img){
+      img.addEventListener('load', function(){syncFlip(img.closest('[data-list-flip]'));});
+    });
+  });
+  window.addEventListener('resize', syncAll);
+  window.addEventListener('orientationchange', function(){setTimeout(syncAll,120);});
+  document.addEventListener('click', function(e){
+    const btn=e.target.closest('[data-list-flip-btn]');
+    if(!btn) return;
+    const photo=btn.closest('[data-list-flip]');
+    if(photo) setTimeout(function(){syncFlip(photo);},0);
+  }, true);
+})();
+</script>
 </body>
 </html>
