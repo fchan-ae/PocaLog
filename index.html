@@ -348,7 +348,35 @@ function saveDB(){localStorage.setItem('pocalogu_figma_v2',JSON.stringify(db))}
 function gid(){return state.group}
 function group(){return GROUPS[state.group]}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function toast(t,duration=1400){const x=document.getElementById('toast');x.textContent=t;x.classList.remove('show');void x.offsetWidth;x.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>x.classList.remove('show'),duration)}
+function toast(t,duration=1600){
+  let x=document.getElementById('toast');
+  if(!x){
+    x=document.createElement('div');
+    x.id='toast';
+    x.className='toast';
+  }
+  if(x.parentElement!==document.body) document.body.appendChild(x);
+  x.textContent=t;
+  x.classList.remove('show');
+  x.style.display='block';
+  x.style.opacity='1';
+  x.style.visibility='visible';
+  x.style.position='fixed';
+  x.style.left='50%';
+  x.style.top='50%';
+  x.style.right='auto';
+  x.style.bottom='auto';
+  x.style.transform='translate3d(-50%,-50%,0)';
+  x.style.webkitTransform='translate3d(-50%,-50%,0)';
+  x.style.zIndex='2147483647';
+  clearTimeout(window._tt);
+  requestAnimationFrame(function(){x.classList.add('show');});
+  window._tt=setTimeout(function(){
+    x.classList.remove('show');
+    x.style.opacity='0';
+    x.style.visibility='hidden';
+  },duration);
+}
 function navHTML(active){return `<button data-nav="home" class="${active==='home'?'active':''}"><span>⌂</span><span>HOME</span></button><button data-nav="wishlist" class="${active==='wishlist'?'active':''}"><span>☆</span><span>Wish</span></button><button class="add" data-nav="add"><span class="circle">＋</span><span>Add</span></button><button data-nav="favorites" class="${active==='favorites'?'active':''}"><span>♡</span><span>Like</span></button><button data-nav="dictionary" class="${active==='dictionary'?'active':''}"><span>▤</span><span>Data</span></button>`}
 function setNavs(active){document.querySelectorAll('.nav').forEach(n=>n.innerHTML=navHTML(active))}
 function go(screen,push=true){if(push&&state.screen!==screen)state.history.push(state.screen);if(screen!=='detail')state.detailReadonly=false;state.screen=screen;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===screen));render();}
@@ -913,6 +941,47 @@ body:not(.home) .header-detail-search{
   }, true);
 })();
 </script>
+
+
+<style id="pocalogu-iphone-toast-final">
+/* iPhone Safari / ホーム画面追加時でも中央に確実に表示 */
+body > #toast,
+#toast.toast{
+  position:fixed !important;
+  left:50% !important;
+  top:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  width:max-content !important;
+  max-width:calc(100vw - 48px) !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  padding:11px 16px !important;
+  border-radius:12px !important;
+  background:#24262c !important;
+  color:#fff !important;
+  border:1px solid #393c44 !important;
+  font-size:13px !important;
+  line-height:1.4 !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+  pointer-events:none !important;
+  opacity:0 !important;
+  visibility:hidden !important;
+  transform:translate3d(-50%,-50%,0) !important;
+  -webkit-transform:translate3d(-50%,-50%,0) !important;
+  z-index:2147483647 !important;
+  display:block !important;
+}
+body > #toast.show,
+#toast.toast.show{
+  opacity:1 !important;
+  visibility:visible !important;
+  transform:translate3d(-50%,-50%,0) !important;
+  -webkit-transform:translate3d(-50%,-50%,0) !important;
+}
+</style>
 
 </body>
 </html>
