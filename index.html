@@ -567,7 +567,7 @@ async function shareEncyclopediaItem(item,type){
 
 function renderSearch(){const sg=state.search.group||state.group;const bg=groupColor(sg);document.documentElement.style.setProperty('--group',bg);document.documentElement.style.setProperty('--member-bg',bg);document.getElementById('searchText').value=state.search.text;document.querySelectorAll('#searchTypeTabs button').forEach(b=>b.classList.toggle('active',b.dataset.searchType===state.search.type));document.querySelectorAll('[data-search-section]').forEach(el=>el.classList.toggle('hidden',el.dataset.searchSection!==state.search.type));document.getElementById('searchGroups').innerHTML=Object.entries(GROUPS).map(([id,g])=>`<button style="${state.search.group===id?`background:${groupColor(id)};border-color:transparent;color:#fff`:''}" class="${state.search.group===id?'active':''}" data-search-group="${id}">${esc(g.name)}</button>`).join('');const ms=groupMemberOptions(sg);document.getElementById('searchMembers').innerHTML=ms.map(m=>`<button class="${state.search.member===m?'active':''}" data-search-member="${esc(m)}">${esc(m)}</button>`).join('');document.getElementById('searchGoodsMembers').innerHTML=ms.map(m=>`<button class="${state.search.member===m?'active':''}" data-search-goods-member="${esc(m)}">${esc(m)}</button>`).join('');const albums=dictFor(sg,'アルバム・作品');document.getElementById('searchAlbums').innerHTML=`<option value="">すべてのアルバム・作品</option>`+albums.map(v=>`<option value="${esc(v)}" ${state.search.album===v?'selected':''}>${esc(v)}</option>`).join('');const events=dictFor(sg,'イベント・会場');document.getElementById('searchEvents').innerHTML=`<option value="">すべてのイベント・会場</option>`+events.map(v=>`<option value="${esc(v)}" ${state.search.event===v?'selected':''}>${esc(v)}</option>`).join('');document.getElementById('searchClasses').innerHTML=dictFor(sg,'カード仕様・種別').map(v=>`<button class="${state.search.classTag===v?'active':''}" data-search-class="${esc(v)}">${esc(v)}</button>`).join('');document.getElementById('searchGoodsCategories').innerHTML=dictFor(sg,'グッズ分類タグ').map(v=>`<button class="${state.search.goodsCategory===v?'active':''}" data-search-goods-category="${esc(v)}">${esc(v)}</button>`).join('');document.querySelectorAll('#searchVisualTabs button').forEach(b=>b.classList.toggle('active',b.dataset.searchVisualTab===state.search.visualTab));const visualType=state.search.visualTab==='length'?'キービジュアル・長さ':state.search.visualTab==='accessory'?'キービジュアル・小物':'キービジュアル・髪色';const visualKey=state.search.visualTab==='length'?'visualLength':state.search.visualTab==='accessory'?'visualAccessory':'visualHair';const visualAttr=state.search.visualTab==='length'?'data-search-visual-length':state.search.visualTab==='accessory'?'data-search-visual-accessory':'data-search-visual-hair';document.getElementById('searchVisualChoices').innerHTML=dictFor(sg,visualType).map(v=>`<button class="${state.search[visualKey]===v?'active':''}" ${visualAttr}="${esc(v)}">${esc(v)}</button>`).join('');document.getElementById('searchStatus').innerHTML=[['owned','所持'],['missing','未所持'],['trade','譲']].map(([v,l])=>`<button class="${state.search.status===v?'active':''}" data-search-status="${v}">${l}</button>`).join('')}
 function askDelete(kind,id){state.deleteTarget={kind,id};document.getElementById('confirm').classList.add('show')}
-function doDelete(){const t=state.deleteTarget;if(!t)return;if(t.kind==='card')db.cards=db.cards.filter(c=>c.id!==t.id);else db.goods=db.goods.filter(g=>g.id!==t.id);saveDB();document.getElementById('confirm').classList.remove('show');toast(t.kind==='card'?'カードを削除しました':'グッズを削除しました',1400);requestAnimationFrame(()=>go('list'))}
+function doDelete(){const t=state.deleteTarget;if(!t)return;if(t.kind==='card')db.cards=db.cards.filter(c=>c.id!==t.id);else db.goods=db.goods.filter(g=>g.id!==t.id);saveDB();document.getElementById('confirm').classList.remove('show');toast(t.kind==='card'?'カードを削除しました':'グッズを削除しました',1800);go('list')}
 // events
 const app=document.getElementById('app');
 let suppressTileClickUntil=0;
@@ -630,7 +630,7 @@ app.addEventListener('click',e=>{
  const ec=e.target.closest('[data-edit-card]');if(ec){const c=db.cards.find(x=>x.id===ec.dataset.editCard);if(c){state.editCardId=c.id;state.regGroup=c.group;state.regMember=c.member;state.regAlbum=c.album;state.regEvent=c.event||c.venue||'';state.regClass=c.tag;state.regStatus=c.status;state.regQty=c.qty||1;state.regVisual=[...(c.visual||[])];state.front=c.front||'';state.back=c.back||'';state.memo=c.memo||'';go('register')}return}
  const eg=e.target.closest('[data-edit-goods]');if(eg){const g=db.goods.find(x=>x.id===eg.dataset.editGoods);if(g){state.editGoodsId=g.id;state.goodsGroup=g.group;state.goodsMember=g.member||groupMemberOptions(g.group)[0];state.goodsEditName=g.name;state.goodsEditCategory=g.category;state.goodsStatus=g.status;state.goodsQty=g.qty||1;state.goodsFront=g.front||'';state.goodsBack=g.back||'';state.goodsEditMemo=g.memo||'';go('goodsRegister')}return}
  const dc=e.target.closest('[data-delete-card]');if(dc){askDelete('card',dc.dataset.deleteCard);return}const dg=e.target.closest('[data-delete-goods]');if(dg){askDelete('goods',dg.dataset.deleteGoods);return}
- const ri=e.target.closest('[data-open-register]');if(ri){closeSheet();if(ri.dataset.openRegister==='card'){state.regGroup=state.group;state.regMember=GROUPS[state.group].members[0];state.regAlbum=ALBUMS[0];state.regEvent='';state.regClass=CLASS_TAGS[0];state.regStatus='owned';state.regQty=1;state.regVisual=[];state.memo='';go('register')}else if(ri.dataset.openRegister==='goods'){state.goodsGroup=state.group;state.goodsMember=groupMemberOptions(state.group)[0];state.goodsQty=1;state.goodsStatus='owned';state.goodsFront='';state.goodsBack='';go('goodsRegister')}else go('dictionary');return}
+ const ri=e.target.closest('[data-open-register]');if(ri){closeSheet();if(ri.dataset.openRegister==='card'){state.regGroup=state.group;state.regMember=GROUPS[state.group].members[0];state.regAlbum=ALBUMS[0];state.regEvent='';state.regClass=CLASS_TAGS[0];resetCardRegisterForm();go('register');setTimeout(bindPhotos,30)}else if(ri.dataset.openRegister==='goods'){state.goodsGroup=state.group;state.goodsMember=groupMemberOptions(state.group)[0];state.goodsQty=1;state.goodsStatus='owned';state.goodsFront='';state.goodsBack='';document.querySelectorAll('#goodsRegister input[type="file"]').forEach(function(inp){try{inp.value='';}catch(_){} });document.querySelectorAll('#goodsRegister .photo-box img').forEach(function(img){img.remove();});go('goodsRegister')}else go('dictionary');return}
  const rm=e.target.closest('[data-reg-member]');if(rm){state.regMember=rm.dataset.regMember;renderRegister();return}
  const rv=e.target.closest('[data-reg-visual]');if(rv){const v=rv.dataset.regVisual;state.regVisual=state.regVisual.includes(v)?state.regVisual.filter(x=>x!==v):[...state.regVisual,v];renderRegister();return}
  const st=e.target.closest('[data-status]');if(st){state.regStatus=st.dataset.status;renderRegister();return}
@@ -659,8 +659,43 @@ function openGroupPicker(target){state.groupPickerTarget=target;const box=docume
 function closeGroupPicker(){document.getElementById('groupPickerSheet').classList.remove('show')}
 document.getElementById('regGroupButton').addEventListener('click',()=>openGroupPicker('card'));document.getElementById('goodsGroupButton').addEventListener('click',()=>openGroupPicker('goods'));document.getElementById('goodsName').addEventListener('input',e=>{});document.getElementById('goodsMemo').addEventListener('input',e=>{});
 document.getElementById('dictGroup').addEventListener('change',e=>{state.dictGroup=e.target.value;state.dictDraft=state.dictType==='グループ'?[...Object.values(GROUPS).map(x=>x.name)]:[...dictFor(state.dictGroup,state.dictType)];if(state.dictType==='メンバー'&&!state.dictDraft.includes('OTHER'))state.dictDraft.push('OTHER');renderDictEditor()});
-document.getElementById('continueReg').addEventListener('click',()=>{saveCard(true);state.regMember=GROUPS[state.regGroup].members[0];state.regVisual=[];state.memo='';toast('登録しました。続けて入力できます');renderRegister()});
-document.getElementById('saveCard').addEventListener('click',()=>saveCard(false));
+function resetCardRegisterForm(){
+  state.editCardId=null;
+  state.front='';
+  state.back='';
+  state.regVisual=[];
+  state.memo='';
+  state.regStatus='owned';
+  state.regQty=1;
+  document.querySelectorAll('#cardForm input[type="file"]').forEach(function(inp){
+    try{inp.value='';}catch(_){}
+    inp.removeAttribute('data-bound');
+  });
+  document.querySelectorAll('#cardForm .photo-box img').forEach(function(img){img.remove();});
+  document.querySelectorAll('#cardForm .photo-box span').forEach(function(span){span.style.display='';});
+}
+
+document.getElementById('continueReg').onclick=function(e){
+  e.preventDefault();
+  e.stopPropagation();
+  saveCard(true);
+  state.regMember=GROUPS[state.regGroup].members[0];
+  state.regVisual=[];
+  state.memo='';
+  state.front='';
+  state.back='';
+  document.querySelectorAll('#cardForm input[type="file"]').forEach(function(inp){try{inp.value='';}catch(_){}});
+  document.querySelectorAll('#cardForm .photo-box img').forEach(function(img){img.remove();});
+  toast('登録しました。続けて登録できます');
+  renderRegister();
+  bindPhotos();
+};
+
+document.getElementById('saveCard').onclick=function(e){
+  e.preventDefault();
+  e.stopPropagation();
+  saveCard(false);
+};
 document.getElementById('saveGoods').addEventListener('click',()=>saveGoods());
 function openDictAdd(){const targetType=state.regDictAddType|| (state.dictType==='キービジュアル'?(state.dictVisualType||'キービジュアル・髪色'):state.dictType);state.dictVisualType=targetType;document.getElementById('dictAddTitle').textContent=(targetType==='キービジュアル・長さ'?'髪の長さ':targetType==='キービジュアル・小物'?'小物':targetType==='キービジュアル・髪色'?'髪色':targetType)+'を新規登録';const input=document.getElementById('dictAddInput');input.value='';const date=document.getElementById('dictAddDate');date.value='';date.classList.toggle('show',targetType==='アルバム・作品');document.getElementById('dictAddSheet').classList.add('show');setTimeout(()=>input.focus(),80)}
 function closeDictAdd(){document.getElementById('dictAddSheet').classList.remove('show')}
@@ -849,30 +884,6 @@ document.addEventListener('dragend',()=>{document.querySelectorAll('.dict-visual
   }, true);
 })();
 </script>
-
-<script id="pocalogu-registration-reset">
-(function(){
-  function resetPhotos(){
-    document.querySelectorAll('input[type="file"]').forEach(function(el){
-      try { el.value = ''; } catch(e) {}
-    });
-    document.querySelectorAll('[data-front-preview],[data-back-preview],.front-preview,.back-preview').forEach(function(el){
-      if(el.tagName === 'IMG'){
-        el.removeAttribute('src');
-      } else {
-        var img=el.querySelector('img');
-        if(img) img.removeAttribute('src');
-      }
-    });
-  }
-  document.addEventListener('click',function(e){
-    var t=e.target.closest('[data-register],[data-open-register],.register-btn,.nav-register,.tab-register');
-    if(t) setTimeout(resetPhotos,60);
-  },true);
-})();
-</script>
-
-
 <style id="pocalogu-home-only-detail-search">
 /* 詳細検索はHOMEのトップバーだけに表示 */
 body:not(.home) [data-detail-search],
@@ -899,49 +910,6 @@ body:not(.home) .header-detail-search{
   new MutationObserver(update).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
 })();
 </script>
-<script id="pocalogu-registration-flow-fix">
-(function(){
-  function textOf(el){ return (el && el.textContent || '').replace(/\s+/g,'').trim(); }
-
-  document.addEventListener('click', function(e){
-    var btn = e.target.closest('button,a');
-    if(!btn) return;
-
-    var t = textOf(btn);
-
-    /* 続けて登録：現在の登録画面にそのまま留まる */
-    if(t.indexOf('続けて登録') !== -1){
-      e.preventDefault();
-      e.stopImmediatePropagation();
-
-      /* 登録画面内の入力内容・写真だけ新規登録用にクリア */
-      setTimeout(function(){
-        document.querySelectorAll('input[type="file"]').forEach(function(el){
-          try{ el.value=''; }catch(err){}
-        });
-        document.querySelectorAll('[data-front-preview],[data-back-preview],.front-preview,.back-preview').forEach(function(el){
-          var img = el.tagName === 'IMG' ? el : el.querySelector('img');
-          if(img) img.removeAttribute('src');
-        });
-      }, 50);
-      return;
-    }
-
-    /* この内容で登録する：カード一覧へ戻る */
-    if(t.indexOf('この内容で登録する') !== -1){
-      setTimeout(function(){
-        var listBtn = document.querySelector(
-          '[data-page="cards"],[data-screen="cards"],[data-nav="cards"],#nav-cards'
-        );
-        if(listBtn){
-          listBtn.click();
-        }
-      }, 80);
-    }
-  }, true);
-})();
-</script>
-
 <style id="pocalogu-like-wish-position-fix">
 /* カード一覧：☆は右上、♡は右下 */
 #list .cards.v2 .star,
