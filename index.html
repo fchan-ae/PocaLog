@@ -344,7 +344,16 @@ const GOODS_TAGS=['アクスタ','ぬいぐるみ','キーリング','ファン�
 let db=loadDB();
 let state={screen:'home',history:[],group:'aespa',member:'ALL',type:'card',view:'2',sort:'registered',selected:null,regGroup:'aespa',regMember:'KARINA',regAlbum:'Armageddon',regEvent:'',regClass:'封入',regStatus:'owned',regQty:1,regVisual:[],front:'',back:'',memo:'',goodsGroup:'aespa',goodsMember:'KARINA',goodsStatus:'owned',goodsQty:1,goodsFront:'',goodsBack:'',dictType:'アルバム・作品',dictGroup:'aespa',dictDraft:[],dictSort:'registered',deleteTarget:null,editCardId:null,editGoodsId:null,search:{text:'',group:'',member:'',album:'',event:'',classTag:'',visual:'',visualHair:'',visualLength:'',visualAccessory:'',visualTab:'hair',status:'',type:'card',goodsCategory:''},profile:{nickname:'',id:''},feedType:{wish:'all',like:'all'},zukanGroup:'aespa',zukanMember:'ALL',zukanQuery:'',sharedEncyclopediaItem:null,detailReadonly:false,regDictAddType:''};
 function loadDB(){try{const x=JSON.parse(localStorage.getItem('pocalogu_figma_v2'));if(x){const demoCards=Array.isArray(x.cards)&&x.cards.length>0&&x.cards.every(c=>/^c_.+_\d+_\d+$/.test(String(c.id||'')));const demoGoods=Array.isArray(x.goods)&&x.goods.length>0&&x.goods.every(g=>/^g_.+_[12]$/.test(String(g.id||'')));if(demoCards&&demoGoods){x.cards=[];x.goods=[]}(x.goods||[]).forEach(g=>{g.front=g.front||g.photo||'';g.back=g.back||'';g.member=g.member||'OTHER'});x.dictByGroup=x.dictByGroup||{};x.dictCommon=x.dictCommon||{};x.albumMeta=x.albumMeta||{};x.profile=x.profile||{nickname:'',id:''};x.profileRegistry=x.profileRegistry||{nicknames:[],ids:[]};if(x.profile.nickname&&!x.profileRegistry.nicknames.includes(x.profile.nickname))x.profileRegistry.nicknames.push(x.profile.nickname);if(x.profile.id&&!x.profileRegistry.ids.includes(x.profile.id))x.profileRegistry.ids.push(x.profile.id);const commonTypes=['ショップ','カード仕様・種別','キービジュアル・髪色','キービジュアル・長さ','キービジュアル・小物','グッズ分類タグ'];commonTypes.forEach(type=>{const merged=[];Object.values(x.dictByGroup).forEach(g=>{(g?.[type]||[]).forEach(v=>{if(!merged.includes(v))merged.push(v)})});if(!merged.length){if(type==='ショップ')merged.push(...COMMON_SHOPS);if(type==='カード仕様・種別')merged.push(...CLASS_TAGS);if(type==='キービジュアル・髪色')merged.push('黒髪','金髪','茶髪','銀髪','赤髪','青髪');if(type==='キービジュアル・長さ')merged.push('ショート','ボブ','ミディアム','ロング');if(type==='キービジュアル・小物')merged.push('メガネ','サングラス','帽子','ヘッドホン','リボン');if(type==='グッズ分類タグ')merged.push(...GOODS_TAGS)}if(type==='ショップ')COMMON_SHOPS.forEach(v=>{if(!merged.includes(v))merged.push(v)});if(type==='グッズ分類タグ')GOODS_TAGS.forEach(v=>{if(!merged.includes(v))merged.push(v)});x.dictCommon[type]=merged});if(x.dictCommon['キービジュアル']&&x.dictCommon['キービジュアル'].length){const old=x.dictCommon['キービジュアル'];x.dictCommon['キービジュアル・髪色']=Array.from(new Set([...(x.dictCommon['キービジュアル・髪色']||[]),...old.filter(v=>['黒髪','金髪','茶髪','銀髪','赤髪','青髪'].includes(v))]));x.dictCommon['キービジュアル・長さ']=Array.from(new Set([...(x.dictCommon['キービジュアル・長さ']||[]),...old.filter(v=>['ショート','ボブ','ミディアム','ロング'].includes(v))]));x.dictCommon['キービジュアル・小物']=Array.from(new Set([...(x.dictCommon['キービジュアル・小物']||[]),...old.filter(v=>!['黒髪','金髪','茶髪','銀髪','赤髪','青髪','ショート','ボブ','ミディアム','ロング'].includes(v))]));delete x.dictCommon['キービジュアル']}Object.entries(GROUPS).forEach(([gid,g])=>{x.dictByGroup[gid]=x.dictByGroup[gid]||{};x.dictByGroup[gid]['メンバー']=x.dictByGroup[gid]['メンバー']||[...g.members];if(!x.dictByGroup[gid]['メンバー'].includes('OTHER'))x.dictByGroup[gid]['メンバー'].push('OTHER');x.dictByGroup[gid]['アルバム・作品']=x.dictByGroup[gid]['アルバム・作品']||[];GROUP_ALBUMS[gid].forEach(v=>{if(!x.dictByGroup[gid]['アルバム・作品'].includes(v))x.dictByGroup[gid]['アルバム・作品'].push(v)});if(gid==='aespa'){x.dictByGroup[gid]['イベント・会場']=x.dictByGroup[gid]['イベント・会場']||[];AESPA_EVENTS.forEach(v=>{if(!x.dictByGroup[gid]['イベント・会場'].includes(v))x.dictByGroup[gid]['イベント・会場'].push(v)});x.albumMeta.aespa=x.albumMeta.aespa||{};Object.entries(AESPA_ALBUM_DATES).forEach(([k,v])=>{x.albumMeta.aespa[k]=v})}x.dictByGroup[gid]['イベント・会場']=x.dictByGroup[gid]['イベント・会場']||['POP-UP','東京ドーム','LIVE TOUR']});return x}}catch(e){};const cards=[];const goods=[];const dictByGroup={};Object.entries(GROUPS).forEach(([gid,g])=>{dictByGroup[gid]={'メンバー':[...g.members,'OTHER'],'アルバム・作品':[...(GROUP_ALBUMS[gid]||ALBUMS)],'イベント・会場':gid==='aespa'?[...AESPA_EVENTS]:['POP-UP','東京ドーム','LIVE TOUR']}});const dictCommon={'ショップ':[...COMMON_SHOPS],'カード仕様・種別':[...CLASS_TAGS],'キービジュアル・髪色':['黒髪','金髪','茶髪','茶髪','銀髪','赤髪','青髪'],'キービジュアル・長さ':['ショート','ボブ','ミディアム','ロング'],'キービジュアル・小物':['メガネ','サングラス','帽子','ヘッドホン','リボン'],'グッズ分類タグ':[...GOODS_TAGS]};return{cards,goods,dictByGroup,dictCommon,albumMeta:{aespa:{...AESPA_ALBUM_DATES}},profile:{nickname:'',id:''},profileRegistry:{nicknames:[],ids:[]}}}
-function saveDB(){localStorage.setItem('pocalogu_figma_v2',JSON.stringify(db))}
+function saveDB(){
+  try{
+    localStorage.setItem('pocalogu_figma_v2',JSON.stringify(db));
+    return true;
+  }catch(err){
+    console.error('PocaLog localStorage save error:',err);
+    toast('保存できませんでした。写真をもう少し小さくしてください',2200);
+    return false;
+  }
+}
 function gid(){return state.group}
 function group(){return GROUPS[state.group]}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -567,7 +576,19 @@ async function shareEncyclopediaItem(item,type){
 
 function renderSearch(){const sg=state.search.group||state.group;const bg=groupColor(sg);document.documentElement.style.setProperty('--group',bg);document.documentElement.style.setProperty('--member-bg',bg);document.getElementById('searchText').value=state.search.text;document.querySelectorAll('#searchTypeTabs button').forEach(b=>b.classList.toggle('active',b.dataset.searchType===state.search.type));document.querySelectorAll('[data-search-section]').forEach(el=>el.classList.toggle('hidden',el.dataset.searchSection!==state.search.type));document.getElementById('searchGroups').innerHTML=Object.entries(GROUPS).map(([id,g])=>`<button style="${state.search.group===id?`background:${groupColor(id)};border-color:transparent;color:#fff`:''}" class="${state.search.group===id?'active':''}" data-search-group="${id}">${esc(g.name)}</button>`).join('');const ms=groupMemberOptions(sg);document.getElementById('searchMembers').innerHTML=ms.map(m=>`<button class="${state.search.member===m?'active':''}" data-search-member="${esc(m)}">${esc(m)}</button>`).join('');document.getElementById('searchGoodsMembers').innerHTML=ms.map(m=>`<button class="${state.search.member===m?'active':''}" data-search-goods-member="${esc(m)}">${esc(m)}</button>`).join('');const albums=dictFor(sg,'アルバム・作品');document.getElementById('searchAlbums').innerHTML=`<option value="">すべてのアルバム・作品</option>`+albums.map(v=>`<option value="${esc(v)}" ${state.search.album===v?'selected':''}>${esc(v)}</option>`).join('');const events=dictFor(sg,'イベント・会場');document.getElementById('searchEvents').innerHTML=`<option value="">すべてのイベント・会場</option>`+events.map(v=>`<option value="${esc(v)}" ${state.search.event===v?'selected':''}>${esc(v)}</option>`).join('');document.getElementById('searchClasses').innerHTML=dictFor(sg,'カード仕様・種別').map(v=>`<button class="${state.search.classTag===v?'active':''}" data-search-class="${esc(v)}">${esc(v)}</button>`).join('');document.getElementById('searchGoodsCategories').innerHTML=dictFor(sg,'グッズ分類タグ').map(v=>`<button class="${state.search.goodsCategory===v?'active':''}" data-search-goods-category="${esc(v)}">${esc(v)}</button>`).join('');document.querySelectorAll('#searchVisualTabs button').forEach(b=>b.classList.toggle('active',b.dataset.searchVisualTab===state.search.visualTab));const visualType=state.search.visualTab==='length'?'キービジュアル・長さ':state.search.visualTab==='accessory'?'キービジュアル・小物':'キービジュアル・髪色';const visualKey=state.search.visualTab==='length'?'visualLength':state.search.visualTab==='accessory'?'visualAccessory':'visualHair';const visualAttr=state.search.visualTab==='length'?'data-search-visual-length':state.search.visualTab==='accessory'?'data-search-visual-accessory':'data-search-visual-hair';document.getElementById('searchVisualChoices').innerHTML=dictFor(sg,visualType).map(v=>`<button class="${state.search[visualKey]===v?'active':''}" ${visualAttr}="${esc(v)}">${esc(v)}</button>`).join('');document.getElementById('searchStatus').innerHTML=[['owned','所持'],['missing','未所持'],['trade','譲']].map(([v,l])=>`<button class="${state.search.status===v?'active':''}" data-search-status="${v}">${l}</button>`).join('')}
 function askDelete(kind,id){state.deleteTarget={kind,id};document.getElementById('confirm').classList.add('show')}
-function doDelete(){const t=state.deleteTarget;if(!t)return;if(t.kind==='card')db.cards=db.cards.filter(c=>c.id!==t.id);else db.goods=db.goods.filter(g=>g.id!==t.id);saveDB();document.getElementById('confirm').classList.remove('show');toast(t.kind==='card'?'カードを削除しました':'グッズを削除しました',1800);go('list')}
+function doDelete(){
+  const t=state.deleteTarget;
+  if(!t)return;
+  if(t.kind==='card')db.cards=db.cards.filter(c=>c.id!==t.id);
+  else db.goods=db.goods.filter(g=>g.id!==t.id);
+  const saved=saveDB();
+  document.getElementById('confirm').classList.remove('show');
+  if(!saved)return;
+  toast(t.kind==='card'?'カードを削除しました':'グッズを削除しました',1800);
+  state.deleteTarget=null;
+  state.selected=null;
+  go('list');
+}
 // events
 const app=document.getElementById('app');
 let suppressTileClickUntil=0;
@@ -630,7 +651,7 @@ app.addEventListener('click',e=>{
  const ec=e.target.closest('[data-edit-card]');if(ec){const c=db.cards.find(x=>x.id===ec.dataset.editCard);if(c){state.editCardId=c.id;state.regGroup=c.group;state.regMember=c.member;state.regAlbum=c.album;state.regEvent=c.event||c.venue||'';state.regClass=c.tag;state.regStatus=c.status;state.regQty=c.qty||1;state.regVisual=[...(c.visual||[])];state.front=c.front||'';state.back=c.back||'';state.memo=c.memo||'';go('register')}return}
  const eg=e.target.closest('[data-edit-goods]');if(eg){const g=db.goods.find(x=>x.id===eg.dataset.editGoods);if(g){state.editGoodsId=g.id;state.goodsGroup=g.group;state.goodsMember=g.member||groupMemberOptions(g.group)[0];state.goodsEditName=g.name;state.goodsEditCategory=g.category;state.goodsStatus=g.status;state.goodsQty=g.qty||1;state.goodsFront=g.front||'';state.goodsBack=g.back||'';state.goodsEditMemo=g.memo||'';go('goodsRegister')}return}
  const dc=e.target.closest('[data-delete-card]');if(dc){askDelete('card',dc.dataset.deleteCard);return}const dg=e.target.closest('[data-delete-goods]');if(dg){askDelete('goods',dg.dataset.deleteGoods);return}
- const ri=e.target.closest('[data-open-register]');if(ri){closeSheet();if(ri.dataset.openRegister==='card'){state.regGroup=state.group;state.regMember=GROUPS[state.group].members[0];state.regAlbum=ALBUMS[0];state.regEvent='';state.regClass=CLASS_TAGS[0];resetCardRegisterForm();go('register');setTimeout(bindPhotos,30)}else if(ri.dataset.openRegister==='goods'){state.goodsGroup=state.group;state.goodsMember=groupMemberOptions(state.group)[0];state.goodsQty=1;state.goodsStatus='owned';state.goodsFront='';state.goodsBack='';document.querySelectorAll('#goodsRegister input[type="file"]').forEach(function(inp){try{inp.value='';}catch(_){} });document.querySelectorAll('#goodsRegister .photo-box img').forEach(function(img){img.remove();});go('goodsRegister')}else go('dictionary');return}
+ const ri=e.target.closest('[data-open-register]');if(ri){closeSheet();if(ri.dataset.openRegister==='card'){state.regGroup=state.group;state.regMember=GROUPS[state.group].members[0];state.regAlbum=ALBUMS[0];state.regEvent='';state.regClass=CLASS_TAGS[0];state.regStatus='owned';state.regQty=1;state.regVisual=[];state.memo='';state.front='';state.back='';state.photoBusy=0;state.editCardId=null;go('register');setTimeout(function(){document.querySelectorAll('#cardForm input[type="file"]').forEach(function(inp){try{inp.value=''}catch(_){}});document.querySelectorAll('#cardForm .photo-box img').forEach(function(img){img.remove()});renderRegister();bindPhotos()},30)}else if(ri.dataset.openRegister==='goods'){state.goodsGroup=state.group;state.goodsMember=groupMemberOptions(state.group)[0];state.goodsQty=1;state.goodsStatus='owned';state.goodsFront='';state.goodsBack='';document.querySelectorAll('#goodsRegister input[type="file"]').forEach(function(inp){try{inp.value='';}catch(_){} });document.querySelectorAll('#goodsRegister .photo-box img').forEach(function(img){img.remove();});go('goodsRegister')}else go('dictionary');return}
  const rm=e.target.closest('[data-reg-member]');if(rm){state.regMember=rm.dataset.regMember;renderRegister();return}
  const rv=e.target.closest('[data-reg-visual]');if(rv){const v=rv.dataset.regVisual;state.regVisual=state.regVisual.includes(v)?state.regVisual.filter(x=>x!==v):[...state.regVisual,v];renderRegister();return}
  const st=e.target.closest('[data-status]');if(st){state.regStatus=st.dataset.status;renderRegister();return}
@@ -712,9 +733,106 @@ document.getElementById('dictItems').addEventListener('drop',e=>{const row=e.tar
 document.querySelectorAll('[data-reg-dict-add]').forEach(b=>b.addEventListener('click',()=>{state.regDictAddType=b.dataset.regDictAdd;state.dictGroup=state.regGroup;openDictAdd()}));
 document.getElementById('dictAdd').addEventListener('click',openDictAdd);document.getElementById('dictAddCancel').addEventListener('click',closeDictAdd);document.getElementById('dictAddConfirm').addEventListener('click',commitDictAdd);document.getElementById('dictAddInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitDictAdd()}});document.getElementById('dictAddSheet').addEventListener('click',e=>{if(e.target.id==='dictAddSheet')closeDictAdd()});
 document.getElementById('dictSave').addEventListener('click',()=>{if(state.dictType==='キービジュアル'){saveDB();toast('キービジュアル辞書を保存しました');go('dictionary')}else if(state.dictType==='グループ'){const names=state.dictDraft.filter(Boolean);toast('グループ辞書は現在登録済みグループを表示しています')}else if(state.dictType==='メンバー'){GROUPS[state.dictGroup].members=[...state.dictDraft.filter(v=>v&&v!=='OTHER')];dictFor(state.dictGroup,'メンバー').splice(0,dictFor(state.dictGroup,'メンバー').length,...Array.from(new Set([...state.dictDraft.filter(Boolean),'OTHER'])))}else{dictFor(state.dictGroup,state.dictType).splice(0,dictFor(state.dictGroup,state.dictType).length,...state.dictDraft.filter(Boolean))}saveDB();toast('辞書を保存しました');go('dictionary')});
-function saveCard(cont){if(state.editCardId){const c=db.cards.find(x=>x.id===state.editCardId);if(!c)return;c.group=state.regGroup;c.member=state.regMember;c.album=state.regAlbum;c.event=state.regEvent;c.tag=state.regClass;c.visual=[...state.regVisual];c.status=state.regStatus;c.qty=state.regStatus==='owned'?state.regQty:0;c.front=state.front;c.back=state.back;c.memo=state.memo;saveDB();const id=c.id;state.editCardId=null;toast('変更を保存しました');state.selected=id;state.group=c.group;state.member=c.member;go('detail');return}const c={id:'c_'+Date.now(),group:state.regGroup,member:state.regMember,album:state.regAlbum,event:state.regEvent,tag:state.regClass,visual:[...state.regVisual],status:state.regStatus,qty:state.regStatus==='owned'?state.regQty:0,wish:false,like:false,front:state.front,back:state.back,memo:state.memo};db.cards.unshift(c);saveDB();shareEncyclopediaItem(c,'card');if(!cont){toast('登録しました',1800);state.group=c.group;state.member=c.member;state.selected=c.id;go('list')} }
+function saveCard(cont){
+  if(state.photoBusy>0){
+    toast('写真を処理中です。少し待ってください',1600);
+    setTimeout(function(){saveCard(cont)},180);
+    return;
+  }
+
+  if(state.editCardId){
+    const c=db.cards.find(x=>x.id===state.editCardId);
+    if(!c)return;
+    c.group=state.regGroup;c.member=state.regMember;c.album=state.regAlbum;c.event=state.regEvent;
+    c.tag=state.regClass;c.visual=[...state.regVisual];c.status=state.regStatus;
+    c.qty=state.regStatus==='owned'?state.regQty:0;c.front=state.front;c.back=state.back;c.memo=state.memo;
+    if(!saveDB())return;
+    const id=c.id;
+    state.editCardId=null;
+    toast('変更を保存しました',1800);
+    state.selected=id;state.group=c.group;state.member=c.member;go('detail');
+    return;
+  }
+
+  const c={
+    id:'c_'+Date.now(),group:state.regGroup,member:state.regMember,album:state.regAlbum,
+    event:state.regEvent,tag:state.regClass,visual:[...state.regVisual],
+    status:state.regStatus,qty:state.regStatus==='owned'?state.regQty:0,wish:false,like:false,
+    front:state.front||'',back:state.back||'',memo:state.memo
+  };
+
+  db.cards.unshift(c);
+  if(!saveDB()){
+    db.cards.shift();
+    return;
+  }
+  shareEncyclopediaItem(c,'card');
+
+  if(cont){
+    toast('登録しました。続けて登録できます',1800);
+    state.editCardId=null;
+    state.front='';state.back='';state.regVisual=[];state.memo='';
+    document.querySelectorAll('#cardForm input[type="file"]').forEach(function(inp){
+      try{inp.value=''}catch(_){}
+    });
+    setTimeout(function(){renderRegister();bindPhotos()},0);
+    return;
+  }
+
+  toast('登録しました',1800);
+  state.group=c.group;state.member=c.member;state.selected=c.id;
+  state.front='';state.back='';
+  go('list');
+}
 function saveGoods(){const name=document.getElementById('goodsName').value.trim();if(!name){toast('グッズ名を入力してください');return}if(state.editGoodsId){const g=db.goods.find(x=>x.id===state.editGoodsId);if(!g)return;g.group=state.goodsGroup;g.member=state.goodsMember||'OTHER';g.name=name;g.category=document.getElementById('goodsCategory').value;g.status=state.goodsStatus;g.qty=state.goodsStatus==='owned'?state.goodsQty:0;g.front=state.goodsFront;g.back=state.goodsBack;g.memo=document.getElementById('goodsMemo').value;saveDB();const id=g.id;state.editGoodsId=null;toast('変更を保存しました');state.selected=id;state.group=g.group;go('goodsDetail');return}const g={id:'g_'+Date.now(),group:state.goodsGroup,member:state.goodsMember||'OTHER',name,category:document.getElementById('goodsCategory').value,status:state.goodsStatus,qty:state.goodsStatus==='owned'?state.goodsQty:0,wish:false,like:false,front:state.goodsFront,back:state.goodsBack,memo:document.getElementById('goodsMemo').value};db.goods.unshift(g);saveDB();shareEncyclopediaItem(g,'goods');toast('登録しました',1800);state.group=g.group;state.selected=g.id;go('list');state.type='goods';renderList()}
-function bindPhotos(){document.querySelectorAll('[data-photo]').forEach(inp=>{if(inp.dataset.bound)return;inp.dataset.bound='1';inp.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{state[e.target.dataset.photo]=r.result;e.target.parentElement.querySelector('img')?.remove();const im=document.createElement('img');im.src=r.result;e.target.parentElement.appendChild(im)};r.readAsDataURL(f)})})}
+function compressPhotoForIPhone(file,done){
+  if(!file){done('');return}
+  const reader=new FileReader();
+  reader.onload=function(){
+    const src=reader.result;
+    const img=new Image();
+    img.onload=function(){
+      const maxSide=900;
+      const scale=Math.min(1,maxSide/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+      const w=Math.max(1,Math.round((img.naturalWidth||img.width)*scale));
+      const h=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d',{alpha:false});
+      if(!ctx){done(src);return}
+      ctx.drawImage(img,0,0,w,h);
+      done(canvas.toDataURL('image/jpeg',0.68));
+    };
+    img.onerror=function(){done(src)};
+    img.src=src;
+  };
+  reader.onerror=function(){done('')};
+  reader.readAsDataURL(file);
+}
+function bindPhotos(){
+  document.querySelectorAll('[data-photo]').forEach(function(inp){
+    if(inp.dataset.bound)return;
+    inp.dataset.bound='1';
+    inp.addEventListener('change',function(e){
+      const f=e.target.files&&e.target.files[0];
+      if(!f)return;
+      state.photoBusy=(state.photoBusy||0)+1;
+      const key=e.target.dataset.photo;
+      compressPhotoForIPhone(f,function(data){
+        state[key]=data;
+        state.photoBusy=Math.max(0,(state.photoBusy||1)-1);
+        const box=e.target.parentElement;
+        const old=box.querySelector('img');
+        if(old)old.remove();
+        if(data){
+          const im=document.createElement('img');
+          im.src=data;
+          box.appendChild(im);
+        }
+      });
+    });
+  });
+}
 document.getElementById('zukanSearch').addEventListener('input',e=>{state.zukanQuery=e.target.value;renderEncyclopedia()});
 const oldRender=render;render=()=>{oldRender();if(state.screen==='register')bindPhotos()};
 render();
