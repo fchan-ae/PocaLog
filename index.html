@@ -61,11 +61,11 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}button:active{tr
 /* latest refinements */
 .list-flip-photo{position:relative;aspect-ratio:55/86;perspective:700px;cursor:pointer;background:#101116;overflow:hidden;border-radius:7px}.card-flip-corner{position:absolute;left:5px;top:5px;z-index:8;width:22px;height:22px;border:1px solid rgba(150,153,160,.38);border-radius:50%;background:rgba(10,11,14,.62);color:#9a9da4;font-size:13px;line-height:20px;padding:0;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}.card-flip-corner:active{transform:scale(.94)}
 .list-flip-photo.square{aspect-ratio:1/1}
-.list-flip-photo .mini-flip{position:absolute;left:0;top:0;width:100%;height:100%;min-width:100%;min-height:100%;max-width:100%;max-height:100%;transform-origin:50% 50%;transform-style:preserve-3d;transition:transform .45s ease}
+.list-flip-photo .mini-flip{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s ease}
 .list-flip-photo.flipped .mini-flip{transform:rotateY(180deg)}
-.list-flip-face{position:absolute;left:0;top:0;width:100%;height:100%;min-width:100%;min-height:100%;max-width:100%;max-height:100%;box-sizing:border-box;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:linear-gradient(145deg,#202227,#0d0e11 62%);display:grid;place-items:center;color:#777a84;font-size:18px;overflow:hidden}
+.list-flip-face{position:absolute;inset:0;backface-visibility:hidden;background:linear-gradient(145deg,#202227,#0d0e11 62%);display:grid;place-items:center;color:#777a84;font-size:18px;overflow:hidden}
 .list-flip-face.back{transform:rotateY(180deg)}
-.list-flip-face img{position:absolute;left:0;top:0;width:100%;height:100%;min-width:100%;min-height:100%;max-width:100%;max-height:100%;object-fit:cover;display:block}
+.list-flip-face img{width:100%;height:100%;object-fit:cover;display:block}
 .vlist .list-flip-photo{width:55px;grid-row:1;align-self:start}
 .vlist.goods .list-flip-photo{width:55px;aspect-ratio:1/1}
 .vlist .meta{padding-right:40px}
@@ -218,20 +218,19 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}button:active{tr
 </style>
 
 <style id="home-lower-tvxq-scroll-only">
-/* HOME下段バインダーのみ：現在のバインダーの大きさ・間隔を保ったまま1列で横スクロール */
+/* HOME下段バインダーのみ：カード登録画面のメンバータブと同じ横スクロール */
 .home-lower-scroll{
   overflow-x:auto!important;
   overflow-y:hidden!important;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-x;
-  overscroll-behavior-x:contain;
   scrollbar-width:none;
 }
 .home-lower-scroll::-webkit-scrollbar{display:none}
 .home-lower-inner{
-  width:393px!important;
-  height:177px!important;
-  flex:0 0 393px!important;
+  width:370px!important;
+  height:176px!important;
+  flex:0 0 370px!important;
   position:relative;
   background:none!important;
 }
@@ -239,8 +238,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}button:active{tr
   position:absolute!important;
   left:0!important;
   top:0!important;
-  width:393px!important;
-  height:177px!important;
+  width:370px!important;
+  height:176px!important;
   max-width:none!important;
   pointer-events:none!important;
   object-fit:fill!important;
@@ -248,17 +247,17 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}button:active{tr
 .home-lower-group{
   position:absolute!important;
   top:0!important;
-  height:177px!important;
-  width:63px!important;
+  height:176px!important;
+  width:58px!important;
   background:transparent!important;
   border:0!important;
 }
-.home-lower-group.g5{left:18px!important}
-.home-lower-group.g6{left:85px!important}
-.home-lower-group.g7{left:153px!important}
-.home-lower-group.g8{left:221px!important}
-.home-lower-group.g9{left:289px!important}
-.home-lower-group.g10{left:353px!important;width:40px!important}
+.home-lower-group.g5{left:-30px!important}
+.home-lower-group.g6{left:38px!important}
+.home-lower-group.g7{left:106px!important}
+.home-lower-group.g8{left:174px!important}
+.home-lower-group.g9{left:242px!important}
+.home-lower-group.g10{left:310px!important}
 </style>
 </head>
 <body>
@@ -662,5 +661,55 @@ document.addEventListener('dragover',e=>{const el=e.target.closest('.dict-visual
 document.addEventListener('drop',e=>{const target=e.target.closest('.dict-visual-item');if(!target||!visualDrag||target===visualDrag)return;e.preventDefault();const type=visualDrag.dataset.visualType;const list=dictFor(state.group,type);const from=+visualDrag.dataset.visualIndex;const to=+target.dataset.visualIndex;if(!Number.isInteger(from)||!Number.isInteger(to))return;const item=list.splice(from,1)[0];list.splice(to,0,item);saveDB();visualDrag=null;renderDictEditor()},true);
 document.addEventListener('dragend',()=>{document.querySelectorAll('.dict-visual-item.dragging,.dict-visual-item.drag-over').forEach(x=>x.classList.remove('dragging','drag-over'));visualDrag=null},true);
 </script>
+
+<style id="pocalogu-list-flip-final-fix">
+/* 表裏を同じカード面として固定 */
+.list-flip-photo{
+  position:relative !important;
+  overflow:hidden !important;
+  transform-style:preserve-3d !important;
+}
+.list-flip-photo .mini-flip{
+  position:absolute !important;
+  left:0 !important;
+  top:0 !important;
+  width:100% !important;
+  height:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  transform-style:preserve-3d !important;
+  transform-origin:50% 50% !important;
+  transition:transform .45s ease !important;
+}
+.list-flip-photo.flipped .mini-flip{
+  transform:rotateY(180deg) !important;
+}
+.list-flip-face{
+  position:absolute !important;
+  left:0 !important;
+  top:0 !important;
+  width:100% !important;
+  height:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  backface-visibility:hidden !important;
+  -webkit-backface-visibility:hidden !important;
+}
+.list-flip-face img{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  margin:0 !important;
+  padding:0 !important;
+  object-fit:cover !important;
+}
+.list-flip-face.back{
+  transform:rotateY(180deg);
+}
+</style>
+
 </body>
 </html>
