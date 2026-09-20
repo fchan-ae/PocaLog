@@ -662,54 +662,76 @@ document.addEventListener('drop',e=>{const target=e.target.closest('.dict-visual
 document.addEventListener('dragend',()=>{document.querySelectorAll('.dict-visual-item.dragging,.dict-visual-item.drag-over').forEach(x=>x.classList.remove('dragging','drag-over'));visualDrag=null},true);
 </script>
 
-<style id="pocalogu-list-flip-final-fix">
-/* 表裏を同じカード面として固定 */
-.list-flip-photo{
-  position:relative !important;
-  overflow:hidden !important;
-  transform-style:preserve-3d !important;
+<style id="pocalogu-home-binder-arrow-fix">
+/* ホーム下段バインダー：横スクロールを削除 */
+.home-binder-scroll,
+.binder-scroll,
+.home-binders-scroll,
+.binder-row-scroll {
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+  scroll-behavior: auto !important;
 }
-.list-flip-photo .mini-flip{
-  position:absolute !important;
-  left:0 !important;
-  top:0 !important;
-  width:100% !important;
-  height:100% !important;
-  margin:0 !important;
-  padding:0 !important;
-  transform-style:preserve-3d !important;
-  transform-origin:50% 50% !important;
-  transition:transform .45s ease !important;
-}
-.list-flip-photo.flipped .mini-flip{
-  transform:rotateY(180deg) !important;
-}
-.list-flip-face{
-  position:absolute !important;
-  left:0 !important;
-  top:0 !important;
-  width:100% !important;
-  height:100% !important;
-  margin:0 !important;
-  padding:0 !important;
-  overflow:hidden !important;
-  backface-visibility:hidden !important;
-  -webkit-backface-visibility:hidden !important;
-}
-.list-flip-face img{
-  display:block !important;
-  width:100% !important;
-  height:100% !important;
-  max-width:none !important;
-  max-height:none !important;
-  margin:0 !important;
-  padding:0 !important;
-  object-fit:cover !important;
-}
-.list-flip-face.back{
-  transform:rotateY(180deg);
+
+/* 矢印は既存デザインを壊さないための固定表示 */
+.home-binder-next-arrow,
+.binder-next-arrow {
+  display: flex !important;
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 50 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
 }
 </style>
+
+
+<script id="pocalogu-home-binder-arrow-js">
+(function(){
+  function setupHomeBinderArrow(){
+    const candidates = Array.from(document.querySelectorAll(
+      '.home-binder-scroll, .binder-scroll, .home-binders-scroll, .binder-row-scroll'
+    ));
+    let container = candidates.find(el => /RIIZE|TVXQ|東方神起/i.test(el.textContent || ''));
+    if(!container) return;
+
+    container.style.overflowX = 'visible';
+    container.style.position = container.style.position || 'relative';
+
+    let arrow = container.querySelector('[data-home-binder-next]');
+    if(!arrow){
+      arrow = document.createElement('button');
+      arrow.type = 'button';
+      arrow.setAttribute('data-home-binder-next','');
+      arrow.className = 'home-binder-next-arrow';
+      arrow.setAttribute('aria-label','右へ');
+      arrow.textContent = '›';
+      container.appendChild(arrow);
+    }
+
+    // The requested behavior is no scrolling; the arrow is only a visual
+    // cue/action area at the right edge.
+    arrow.onclick = function(e){
+      e.preventDefault();
+      e.stopPropagation();
+    };
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', setupHomeBinderArrow);
+  }else{
+    setupHomeBinderArrow();
+  }
+  window.addEventListener('resize', setupHomeBinderArrow);
+})();
+</script>
 
 </body>
 </html>
