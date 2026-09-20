@@ -799,5 +799,56 @@ document.addEventListener('dragend',()=>{document.querySelectorAll('.dict-visual
   }, true);
 })();
 </script>
+
+<script id="pocalogu-registration-reset">
+(function(){
+  function resetPhotos(){
+    document.querySelectorAll('input[type="file"]').forEach(function(el){
+      try { el.value = ''; } catch(e) {}
+    });
+    document.querySelectorAll('[data-front-preview],[data-back-preview],.front-preview,.back-preview').forEach(function(el){
+      if(el.tagName === 'IMG'){
+        el.removeAttribute('src');
+      } else {
+        var img=el.querySelector('img');
+        if(img) img.removeAttribute('src');
+      }
+    });
+  }
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('[data-register],[data-open-register],.register-btn,.nav-register,.tab-register');
+    if(t) setTimeout(resetPhotos,60);
+  },true);
+})();
+</script>
+
+
+<style id="pocalogu-home-only-detail-search">
+/* 詳細検索はHOMEのトップバーだけに表示 */
+body:not(.home) [data-detail-search],
+body:not(.home) .detail-search-btn,
+body:not(.home) .top-detail-search,
+body:not(.home) .header-detail-search{
+  display:none !important;
+}
+</style>
+
+
+<script id="pocalogu-home-only-detail-search-js">
+(function(){
+  function update(){
+    var home=document.querySelector('#home,[data-page="home"],[data-screen="home"]');
+    var visible=!!home && getComputedStyle(home).display!=='none';
+    document.querySelectorAll('[data-detail-search],.detail-search-btn,.top-detail-search,.header-detail-search').forEach(function(el){
+      var inHome=!!el.closest('#home,[data-page="home"],[data-screen="home"]');
+      el.style.display=(visible && inHome)?'':'none';
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',update);
+  else update();
+  new MutationObserver(update).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+})();
+</script>
+
 </body>
 </html>
