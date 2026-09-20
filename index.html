@@ -850,5 +850,69 @@ body:not(.home) .header-detail-search{
 })();
 </script>
 
+
+<style id="pocalogu-center-toast">
+/* 登録・削除完了メッセージを画面中央へ */
+.toast,
+.toast-message,
+.notice-toast,
+.save-toast,
+.delete-toast,
+[data-toast]{
+  position:fixed !important;
+  left:50% !important;
+  top:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:translate(-50%,-50%) !important;
+  z-index:99999 !important;
+  margin:0 !important;
+}
+</style>
+
+
+<script id="pocalogu-registration-flow-fix">
+(function(){
+  function textOf(el){ return (el && el.textContent || '').replace(/\s+/g,'').trim(); }
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('button,a');
+    if(!btn) return;
+
+    var t = textOf(btn);
+
+    /* 続けて登録：現在の登録画面にそのまま留まる */
+    if(t.indexOf('続けて登録') !== -1){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      /* 登録画面内の入力内容・写真だけ新規登録用にクリア */
+      setTimeout(function(){
+        document.querySelectorAll('input[type="file"]').forEach(function(el){
+          try{ el.value=''; }catch(err){}
+        });
+        document.querySelectorAll('[data-front-preview],[data-back-preview],.front-preview,.back-preview').forEach(function(el){
+          var img = el.tagName === 'IMG' ? el : el.querySelector('img');
+          if(img) img.removeAttribute('src');
+        });
+      }, 50);
+      return;
+    }
+
+    /* この内容で登録する：カード一覧へ戻る */
+    if(t.indexOf('この内容で登録する') !== -1){
+      setTimeout(function(){
+        var listBtn = document.querySelector(
+          '[data-page="cards"],[data-screen="cards"],[data-nav="cards"],#nav-cards'
+        );
+        if(listBtn){
+          listBtn.click();
+        }
+      }, 80);
+    }
+  }, true);
+})();
+</script>
+
 </body>
 </html>
