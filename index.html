@@ -370,6 +370,103 @@ body{min-height:100dvh}
 /* 上下バーは今のデザインのまま、現在の端末表示領域の上下に固定 */
 .nav{bottom:0}
 </style>
+<style id="pocalogu-home-collection-summary">
+/* HOME：Wish一覧の代わりに自分のコレクション状況を表示。バインダーとボトムバー以外の既存デザインは変更しない。 */
+#home .home-collection-summary{
+  position:absolute;left:20px;top:535px;width:353px;height:190px;z-index:8;
+  box-sizing:border-box;background:#08080a;color:#e8e9ed;
+  padding:4px 0 0;
+}
+#home .home-collection-heading{display:flex;align-items:baseline;gap:10px;height:30px;margin:0 0 7px 20px;}
+#home .home-collection-heading .main{font-size:18px;font-weight:850;letter-spacing:-.4px;}
+#home .home-collection-heading .sub{font-size:9px;color:#8f929c;font-weight:700;}
+#home .home-collection-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:0 20px;}
+#home .home-collection-stat{height:102px;border:1px solid #2a2d33;border-radius:11px;background:#121419;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+#home .home-collection-stat .num{font-size:24px;line-height:1;font-weight:850;letter-spacing:-.5px;}
+#home .home-collection-stat .label{margin-top:9px;font-size:8px;color:#9b9ea8;font-weight:800;letter-spacing:.2px;}
+#home .home-collection-stat.wish .num{color:#f2c94c;}
+#home .home-hot.wish{display:none;}
+#home .home-wishlist-live{display:none!important;}
+</style>
+<style id="pocalogu-home-safe-area-final">
+/* HOMEのみ：既存SVGのデザイン寸法は変えず、iPhoneの上下セーフエリアだけを外側に確保。
+   上側のコンテンツはsafe-area-top分だけ下げ、下部ナビは元SVGの97pxをそのまま切り出して
+   safe-area-bottomの上に固定する。中央のバインダー棚は元の比率・サイズを維持する。 */
+#home{height:100dvh;max-height:100dvh;overflow:hidden;position:relative;
+  --home-safe-top:env(safe-area-inset-top,0px);
+  --home-safe-bottom:env(safe-area-inset-bottom,0px);
+}
+#home .home-bg-svg{top:var(--home-safe-top);left:0;width:393px;height:852px;max-width:none;
+  transform:none;clip-path:inset(0 0 97px 0);z-index:1;}
+#home .home-profile-title,
+#home .home-hot,
+#home .home-wishlist-live{transform:translateY(var(--home-safe-top));}
+#home .home-nav-hot{bottom:var(--home-safe-bottom);height:97px;transform:none;z-index:20;}
+/* SVG内の元ボトムバー（y=755〜852）だけを同じ画像から切り出して、safe areaの上へ配置 */
+#home::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:var(--home-safe-bottom);
+  width:393px;
+  height:97px;
+  z-index:19;
+  pointer-events:none;
+  background-image:var(--home-full-bg);
+  background-repeat:no-repeat;
+  background-size:393px 852px;
+  background-position:0 100%;
+  display:block !important;
+}
+/* 男子バインダーのタップ領域も上側コンテンツと同じだけ追従 */
+#home .home-lower-scroll{transform:translateY(var(--home-safe-top));}
+</style>
+
+<style id="pocalogu-home-bars-final">
+/* HOME：他ページと同じ上下バー構造に合わせる。デザインはSVGから切り離さず、中央の棚だけをそのまま残す。 */
+#home .home-bg-svg{
+  top:0!important;
+  left:0!important;
+  width:393px!important;
+  height:852px!important;
+  max-width:none!important;
+  transform:none!important;
+  clip-path:inset(0 0 112px 0)!important;
+  z-index:1!important;
+}
+#home .home-profile-title,#home .home-hot,#home .home-wishlist-live{
+  transform:none!important;
+}
+#home .home-nav-hot{
+  bottom:0!important;
+  height:112px!important;
+  z-index:210!important;
+}
+#home .nav{
+  position:absolute!important;
+  left:0!important;
+  right:auto!important;
+  bottom:0!important;
+  width:393px!important;
+  height:112px!important;
+  min-height:112px!important;
+  z-index:200!important;
+  display:flex!important;
+}
+#home .nav button{height:112px!important;}
+/* HOMEのWish枠がボトムバーに近づきすぎないよう、必要最小限だけ高さを詰める */
+#home .home-wishlist-live{height:140px!important;}
+#home .home-wish-card{height:140px!important;}
+/* バインダー棚の元位置・サイズは変更しない */
+</style>
+<style id="home-collection-refine-final">
+/* HOME: My Collection の表記だけ洗練。レイアウト・バインダー等は変更しない */
+#home .home-collection-heading{height:26px;margin-bottom:7px;}
+#home .home-collection-heading .main{font-size:12px;font-weight:850;letter-spacing:1.2px;}
+#home .home-collection-stat .num{font-size:28px;line-height:1;font-weight:850;letter-spacing:-.6px;}
+#home .home-collection-stat .label{margin-top:8px;font-size:9px;color:#9b9ea8;font-weight:800;letter-spacing:.8px;}
+#home .home-collection-stat.wish .label{color:#f2c94c;}
+</style>
 </head>
 <body>
 <div class="app" id="app">
@@ -378,8 +475,15 @@ body{min-height:100dvh}
     <div class="home-profile-title" id="homeProfileTitle"><span class="nickname">MY</span>&nbsp;PocaLog</div>
     <button class="home-hot logo" data-nav="home" aria-label="HOMEへ戻る"></button><button class="home-hot search" data-open-search aria-label="詳細検索"></button>
     <button class="home-hot g1" data-group="aespa"></button><button class="home-hot g2" data-group="h2h"></button><button class="home-hot g3" data-group="redvelvet"></button><button class="home-hot g4" data-group="snsd"></button><button class="home-hot g5" data-group="riize"></button><button class="home-hot g6" data-group="nct"></button><button class="home-hot g7" data-group="exo"></button><button class="home-hot g8" data-group="shinee"></button><button class="home-hot g9" data-group="sj"></button><button class="home-hot g10" data-group="tvxq"></button>
-    <button class="home-hot wish" data-nav="wishlist"></button>
-    <div class="home-wishlist-live" id="homeWishlistLive"></div><button class="home-nav-hot n1" data-nav="home" aria-label="HOME"></button><button class="home-nav-hot n2" data-nav="wishlist" aria-label="Wish"></button><button class="home-nav-hot n3" data-nav="add" aria-label="Add"></button><button class="home-nav-hot n4" data-nav="favorites" aria-label="Like"></button><button class="home-nav-hot n5" data-nav="dictionary" aria-label="Data"></button>
+    <div class="home-collection-summary" id="homeCollectionSummary" aria-label="自分のコレクション状況">
+      <div class="home-collection-heading"><span class="main">MY COLLECTION</span></div>
+      <div class="home-collection-stats">
+        <div class="home-collection-stat"><span class="num" id="homeOwnedCards">0</span><span class="label">CARDS</span></div>
+        <div class="home-collection-stat"><span class="num" id="homeOwnedGoods">0</span><span class="label">GOODS</span></div>
+        <div class="home-collection-stat wish"><span class="num" id="homeWishCount">0</span><span class="label">WISH</span></div>
+      </div>
+    </div>
+    <div class="home-wishlist-live" id="homeWishlistLive"></div><button class="home-nav-hot n1" data-nav="home" aria-label="HOME"></button><button class="home-nav-hot n2" data-nav="wishlist" aria-label="Wish"></button><button class="home-nav-hot n3" data-nav="add" aria-label="Add"></button><button class="home-nav-hot n4" data-nav="favorites" aria-label="Like"></button><button class="home-nav-hot n5" data-nav="dictionary" aria-label="Data"></button><div class="nav" id="navHome"></div>
   </section>
 
   <section class="screen" id="list"><div class="scroll"><div class="top"><div class="left"><button class="back" data-back>‹</button><div class="title" id="listTitle">aespa</div></div><button class="tool" data-open-search><svg class="search-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5H15M3 9H15M3 13H15M6 3V7M12 7V11M8 11V15"/></svg></button></div><div class="content">
@@ -568,7 +672,8 @@ function filteredGoods(){let a=db.goods.filter(g=>g.group===state.group);if(stat
 function setupHomeFullBgVar(){const img=document.querySelector('#home .home-bg-svg');if(img&&img.src)document.documentElement.style.setProperty('--home-full-bg',`url("${img.src}")`)}
 function setupHomeLogoVar(){const src=document.querySelector('.home-bg-svg')?.getAttribute('src');if(src)document.documentElement.style.setProperty('--home-logo-bg',`url(\"${src}\")`)}
 function setupHomeLowerStrip(){const inner=document.querySelector('.home-lower-inner');const src=document.querySelector('.home-bg-svg')?.getAttribute('src');if(inner&&src){let lowerSrc=src;try{const raw=atob(src.split(',')[1]);const svg=raw.replace('width=\"353\" height=\"176\" fill=\"white\" transform=\"translate(20 351)\"','width=\"373\" height=\"176\" fill=\"white\" transform=\"translate(20 351)\"');lowerSrc='data:image/svg+xml;base64,'+btoa(svg)}catch(e){}inner.style.backgroundImage=`url(\"${lowerSrc}\")`;inner.style.backgroundSize='393px 852px';inner.style.backgroundPosition='0 -348px';inner.style.backgroundRepeat='no-repeat';}}
-function renderHomeWishlist(){const el=document.getElementById('homeWishlistLive');if(!el)return;const arr=db.cards.filter(c=>c.wish).slice(0,3);el.innerHTML=arr.map(c=>`<button class="home-wish-card" data-open-card="${c.id}" title="${esc(c.member)} ${esc(c.album)}">${c.front?`<img src="${c.front}" alt="">`:''}<span class="hw-star">★</span><span class="hw-label">${esc(c.member)} · ${esc(c.album)}</span></button>`).join('');}
+function renderHomeWishlist(){renderHomeCollectionSummary();const el=document.getElementById('homeWishlistLive');if(!el)return;const arr=db.cards.filter(c=>c.wish).slice(0,3);el.innerHTML=arr.map(c=>`<button class="home-wish-card" data-open-card="${c.id}" title="${esc(c.member)} ${esc(c.album)}">${c.front?`<img src="${c.front}" alt="">`:''}<span class="hw-star">★</span><span class="hw-label">${esc(c.member)} · ${esc(c.album)}</span></button>`).join('');}
+function renderHomeCollectionSummary(){const cards=Array.isArray(db.cards)?db.cards:[];const goods=Array.isArray(db.goods)?db.goods:[];const ownedCards=cards.filter(c=>c.status==='owned').reduce((n,c)=>n+(Number(c.qty)||0),0);const ownedGoods=goods.filter(g=>g.status==='owned').reduce((n,g)=>n+(Number(g.qty)||0),0);const wishes=cards.filter(c=>c.wish).length+goods.filter(g=>g.wish).length;const a=document.getElementById('homeOwnedCards'),b=document.getElementById('homeOwnedGoods'),w=document.getElementById('homeWishCount');if(a)a.textContent=ownedCards.toLocaleString('ja-JP');if(b)b.textContent=ownedGoods.toLocaleString('ja-JP');if(w)w.textContent=wishes.toLocaleString('ja-JP');}
 function renderFeed(kind){
  const el=document.getElementById(kind==='wish'?'wishItems':'likeItems'); if(!el)return;
  const selected=state.feedType?.[kind]||'all';
@@ -599,6 +704,7 @@ function profileIsUsed(kind,value,currentValue){
 function render(){
  setupHomeFullBgVar();setupHomeLogoVar();
  renderHomeWishlist();
+ renderHomeCollectionSummary();
  const nick=(db.profile?.nickname||'').trim(); const homeTitle=document.getElementById('homeProfileTitle'); if(homeTitle)homeTitle.innerHTML=`<span class="nickname">${esc(nick||'MY')}</span>&nbsp;PocaLog`;
  setNavs(state.screen==='home'?'home':state.screen==='wishlist'?'wishlist':state.screen==='favorites'?'favorites':state.screen==='dictionary'||state.screen==='dictEditor'||state.screen==='myPage'||state.screen==='encyclopedia'?'dictionary':'');
  if(state.screen==='home')return;
