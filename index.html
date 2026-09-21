@@ -356,6 +356,20 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}button:active{tr
 }
 #wishlist .content.cards.v4 .list-flip-photo, #favorites .content.cards.v4 .list-flip-photo{border-radius:7px;}
 </style>
+
+<style id="pocalog-viewport-safe-fix">
+/* iPhoneの画面高に合わせるだけの共通レイアウト修正
+   デザイン上の幅・バーの高さ・位置・画像は変更しない */
+html,body{height:100%;min-height:100%;overflow:hidden}
+body{min-height:100dvh}
+.app{height:100dvh;min-height:0;max-height:100dvh}
+.screen{height:100%;min-height:0}
+.scroll{height:100%;min-height:0}
+#list,.screen#list{height:100%;min-height:0;max-height:100dvh}
+#list .scroll{height:100%;max-height:none}
+/* 上下バーは今のデザインのまま、現在の端末表示領域の上下に固定 */
+.nav{bottom:0}
+</style>
 </head>
 <body>
 <div class="app" id="app">
