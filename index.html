@@ -987,7 +987,7 @@ function encyclopediaPayload(item,type){
   const idTag=item.id?`__poca_id:${item.id}`:'';
   const tags=[typeTag,idTag,...(shop?[`__shop:${shop}`]:[]),...actualTags].filter(Boolean).join('|');
   return {
-    owner_user_id:cloudState.user?.id||null,
+    owner_user_id:null,
     group_name:groupName,
     member_name:item.member||'OTHER',
     album_name:isGoods?(item.name||''):(item.album||''),
@@ -1001,15 +1001,10 @@ function encyclopediaPayload(item,type){
 
 async function shareEncyclopediaItem(item,type){
  try{
-   if(!cloudState.ready){
-     const user=await ensureCloudUser();
-     if(!user)return false;
-   }
    const payload=encyclopediaPayload(item,type);
-   /* 図鑑登録時は、画像データを含む巨大な重複チェック用GETを行わず、そのままINSERTする。 */
+   /* 図鑑登録はログイン不要。今までどおり匿名で登録できるようにする。 */
    const {data,error}=await supabaseClient.from('pocalog_encyclopedia').insert(payload).select('id').single();
    if(error){console.error('PocaLog encyclopedia save error:',error);return false;}
-   /* 自分のカードと図鑑の行を結び付ける。owner_user_idは画面には表示しない。 */
    if(data?.id) item.encyclopediaId=data.id;
    saveDB();
    return true;
@@ -1018,12 +1013,11 @@ async function shareEncyclopediaItem(item,type){
 
 async function syncEncyclopediaItem(item,type){
   try{
-    if(!item||!item.encyclopediaId||!cloudState.user)return false;
+    if(!item||!item.encyclopediaId)return false;
     const payload=encyclopediaPayload(item,type);
     const {data,error}=await supabaseClient.from('pocalog_encyclopedia')
       .update(payload)
       .eq('id',item.encyclopediaId)
-      .eq('owner_user_id',cloudState.user.id)
       .select('id')
       .limit(1);
     if(error){console.error('PocaLog encyclopedia update error:',error);return false;}
@@ -1038,11 +1032,10 @@ async function syncEncyclopediaItem(item,type){
 
 async function deleteEncyclopediaItem(item){
   try{
-    if(!item?.encyclopediaId||!cloudState.user)return true;
+    if(!item?.encyclopediaId)return true;
     const {error}=await supabaseClient.from('pocalog_encyclopedia')
       .delete()
-      .eq('id',item.encyclopediaId)
-      .eq('owner_user_id',cloudState.user.id);
+      .eq('id',item.encyclopediaId);
     if(error){console.error('PocaLog encyclopedia delete error:',error);return false;}
     return true;
   }catch(err){console.error('PocaLog encyclopedia delete error:',err);return false}
