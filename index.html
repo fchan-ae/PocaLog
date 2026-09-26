@@ -881,7 +881,7 @@ function render(){
  setupHomeFullBgVar();setupHomeLogoVar();
  renderHomeWishlist();
  renderHomeCollectionSummary();
- const nick=(db.profile?.nickname||'').trim(); const homeTitle=document.getElementById('homeProfileTitle'); if(homeTitle){ if(nick){ const long=nick.length>8; homeTitle.classList.toggle('long',long); homeTitle.classList.toggle('short',!long); homeTitle.style.fontSize=long?(nick.length<=10?15:14):16; homeTitle.innerHTML=`<span class="nickname">${esc(nick)}</span><span class="pocalog-sub">のPocaLog</span>`; homeTitle.title=`${nick}のPocaLog`; }else{ homeTitle.classList.remove('long'); homeTitle.classList.add('short'); homeTitle.style.fontSize='16px'; homeTitle.innerHTML='<span class="nickname">MY</span><span class="pocalog-sub"> PocaLog</span>'; homeTitle.title='MY PocaLog'; } }
+ const nick=(db.profile?.nickname||'').trim(); const homeTitle=document.getElementById('homeProfileTitle'); if(homeTitle){ if(nick){ const long=Array.from(nick).length>8; homeTitle.style.display='flex'; homeTitle.classList.toggle('long',long); homeTitle.classList.toggle('short',!long); homeTitle.style.fontSize=long?(Array.from(nick).length<=10?15:14):16; homeTitle.innerHTML=`<span class="nickname">${esc(nick)}</span><span class="pocalog-sub">のPocaLog</span>`; homeTitle.title=`${nick}のPocaLog`; }else{ homeTitle.style.display='none'; homeTitle.classList.remove('long'); homeTitle.classList.add('short'); homeTitle.innerHTML=''; homeTitle.title='MY PocaLog'; } }
  setNavs(state.screen==='home'?'home':state.screen==='wishlist'?'wishlist':state.screen==='favorites'?'favorites':state.screen==='dictionary'||state.screen==='dictEditor'||state.screen==='myPage'||state.screen==='encyclopedia'?'dictionary':'');
  if(state.screen==='home')return;
  if(state.screen==='encyclopedia')renderEncyclopedia(); if(state.screen==='list')renderList(); if(state.screen==='detail')renderDetail(); if(state.screen==='goodsDetail')renderGoodsDetail(); if(state.screen==='register')renderRegister(); if(state.screen==='goodsRegister')renderGoodsRegister(); if(state.screen==='dictionary')renderDictionary(); if(state.screen==='dictEditor')renderDictEditor(); if(state.screen==='wishlist')renderFeed('wish'); if(state.screen==='favorites')renderFeed('like'); if(state.screen==='myPage')renderMyPage();
@@ -994,11 +994,8 @@ async function shareEncyclopediaItem(item,type){
      image_url:item.front||'',
      back_image_url:item.back||''
    };
-   let q=supabaseClient.from('pocalog_encyclopedia').select('id').limit(1);
-   Object.entries(payload).forEach(([k,v])=>{q=q.eq(k,v)});
-   const {data:existing,error:findError}=await q;
-   if(findError){console.error('PocaLog encyclopedia duplicate check:',findError);return false;}
-   if(existing&&existing.length)return true;
+   /* 図鑑登録時は、画像データを含む巨大な重複チェック用GETを行わず、
+      そのままINSERTする。これにより長い画像データで処理が止まるのを防ぐ。 */
    const {error}=await supabaseClient.from('pocalog_encyclopedia').insert(payload);
    if(error){console.error('PocaLog encyclopedia save error:',error);return false;}
    return true;
@@ -1509,6 +1506,14 @@ body:not(.home) .header-detail-search{
 #home .home-profile-title.short{flex-direction:row!important;white-space:nowrap!important}
 #home .home-profile-title.short .pocalog-sub{display:inline!important}
 </style>
+
+<style id="pocalog-home-collection-safe-area-fix">
+/* HOME：iPhoneの上部セーフエリア分だけMY COLLECTIONを上へ戻し、見切れを防ぐ。
+   今回はMY COLLECTIONの位置だけを調整し、それ以外は変更しない。 */
+#home .home-collection-summary{
+  top:calc(500px - env(safe-area-inset-top,0px)) !important;
+}
+</style>
 </body>
 </html>
 
@@ -1581,4 +1586,16 @@ body:not(.home) .header-detail-search{
   background:transparent!important;
   border:0!important;
 }
+</style>
+
+<style id="pocalog-home-only-current-fix">
+/* 今回の修正はHOMEのMY COLLECTIONとトップタイトルだけ。その他は変更しない。 */
+#home .home-collection-summary{top:500px!important;}
+/* ニックネーム登録時だけ、SVGに元からある「MY PocaLog」をこのタイトルで置き換える。 */
+#home .home-profile-title{background:#08080a!important;}
+#home .home-profile-title.long{flex-direction:column!important;white-space:normal!important;gap:2px!important;justify-content:center!important;}
+#home .home-profile-title.long .nickname{display:block!important;max-width:220px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+#home .home-profile-title.long .pocalog-sub{display:block!important;font-size:14px!important;white-space:nowrap!important;}
+#home .home-profile-title.short{flex-direction:row!important;white-space:nowrap!important;}
+#home .home-profile-title.short .pocalog-sub{display:inline!important;white-space:nowrap!important;}
 </style>
