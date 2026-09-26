@@ -978,41 +978,92 @@ async function renderEncyclopedia(){
  }).join(''):'<div class="zukan-empty">条件に一致するカード・グッズがありません。</div>';
 }
 
+function encyclopediaPayload(item,type){
+  const isGoods=type==='goods';
+  const groupName=GROUPS[item.group]?.name||item.group||'';
+  const actualTags=isGoods?[]:(item.visual||[]);
+  const shop=(item.shop||'');
+  const typeTag=isGoods?'__type:goods':'__type:card';
+  const idTag=item.id?`__poca_id:${item.id}`:'';
+  const tags=[typeTag,idTag,...(shop?[`__shop:${shop}`]:[]),...actualTags].filter(Boolean).join('|');
+  return {
+    owner_user_id:cloudState.user?.id||null,
+    group_name:groupName,
+    member_name:item.member||'OTHER',
+    album_name:isGoods?(item.name||''):(item.album||''),
+    event_name:isGoods?'':(item.event||''),
+    category:isGoods?(item.category||''):(item.tag||''),
+    tags,
+    image_url:item.front||'',
+    back_image_url:item.back||''
+  };
+}
+
 async function shareEncyclopediaItem(item,type){
  try{
-   const isGoods=type==='goods';
-   const groupName=GROUPS[item.group]?.name||item.group||'';
-   const actualTags=isGoods?[]:(item.visual||[]);
-   const shop=(item.shop||'');const tags=(isGoods?[`__type:goods`,...(shop?[`__shop:${shop}`]:[])]:[`__type:card`,...(shop?[`__shop:${shop}`]:[]),...actualTags]).join('|');
-   const payload={
-     group_name:groupName,
-     member_name:item.member||'OTHER',
-     album_name:isGoods?(item.name||''):(item.album||''),
-     event_name:isGoods?'':(item.event||''),
-     category:isGoods?(item.category||''):(item.tag||''),
-     tags,
-     image_url:item.front||'',
-     back_image_url:item.back||''
-   };
-   /* 図鑑登録時は、画像データを含む巨大な重複チェック用GETを行わず、
-      そのままINSERTする。これにより長い画像データで処理が止まるのを防ぐ。 */
-   const {error}=await supabaseClient.from('pocalog_encyclopedia').insert(payload);
+   if(!cloudState.ready){
+     const user=await ensureCloudUser();
+     if(!user)return false;
+   }
+   const payload=encyclopediaPayload(item,type);
+   /* 図鑑登録時は、画像データを含む巨大な重複チェック用GETを行わず、そのままINSERTする。 */
+   const {data,error}=await supabaseClient.from('pocalog_encyclopedia').insert(payload).select('id').single();
    if(error){console.error('PocaLog encyclopedia save error:',error);return false;}
+   /* 自分のカードと図鑑の行を結び付ける。owner_user_idは画面には表示しない。 */
+   if(data?.id) item.encyclopediaId=data.id;
+   saveDB();
    return true;
  }catch(err){console.error('PocaLog encyclopedia save error:',err);return false}
 }
 
+async function syncEncyclopediaItem(item,type){
+  try{
+    if(!item||!item.encyclopediaId||!cloudState.user)return false;
+    const payload=encyclopediaPayload(item,type);
+    const {data,error}=await supabaseClient.from('pocalog_encyclopedia')
+      .update(payload)
+      .eq('id',item.encyclopediaId)
+      .eq('owner_user_id',cloudState.user.id)
+      .select('id')
+      .limit(1);
+    if(error){console.error('PocaLog encyclopedia update error:',error);return false;}
+    if(data?.[0]?.id){
+      item.encyclopediaId=data[0].id;
+      saveDB();
+      return true;
+    }
+    return false;
+  }catch(err){console.error('PocaLog encyclopedia update error:',err);return false}
+}
+
+async function deleteEncyclopediaItem(item){
+  try{
+    if(!item?.encyclopediaId||!cloudState.user)return true;
+    const {error}=await supabaseClient.from('pocalog_encyclopedia')
+      .delete()
+      .eq('id',item.encyclopediaId)
+      .eq('owner_user_id',cloudState.user.id);
+    if(error){console.error('PocaLog encyclopedia delete error:',error);return false;}
+    return true;
+  }catch(err){console.error('PocaLog encyclopedia delete error:',err);return false}
+}
+
 function renderSearch(){const sg=state.search.group||state.group;const bg=groupColor(sg);document.documentElement.style.setProperty('--group',bg);document.documentElement.style.setProperty('--member-bg',bg);document.getElementById('searchText').value=state.search.text;document.querySelectorAll('#searchTypeTabs button').forEach(b=>b.classList.toggle('active',b.dataset.searchType===state.search.type));document.querySelectorAll('[data-search-section]').forEach(el=>el.classList.toggle('hidden',el.dataset.searchSection!==state.search.type));document.getElementById('searchGroups').innerHTML=Object.entries(GROUPS).map(([id,g])=>`<button style="${state.search.group===id?`background:${groupColor(id)};border-color:transparent;color:#fff`:''}" class="${state.search.group===id?'active':''}" data-search-group="${id}">${esc(g.name)}</button>`).join('');const ms=groupMemberOptions(sg);document.getElementById('searchMembers').innerHTML=ms.map(m=>`<button class="${state.search.member===m?'active':''}" data-search-member="${esc(m)}">${esc(m)}</button>`).join('');document.getElementById('searchGoodsMembers').innerHTML=ms.map(m=>`<button class="${state.search.member===m?'active':''}" data-search-goods-member="${esc(m)}">${esc(m)}</button>`).join('');const albums=dictFor(sg,'アルバム・作品');document.getElementById('searchAlbums').innerHTML=`<option value="">すべてのアルバム・作品</option>`+albums.map(v=>`<option value="${esc(v)}" ${state.search.album===v?'selected':''}>${esc(v)}</option>`).join('');const events=dictFor(sg,'イベント・会場');document.getElementById('searchEvents').innerHTML=`<option value="">すべてのイベント・会場</option>`+events.map(v=>`<option value="${esc(v)}" ${state.search.event===v?'selected':''}>${esc(v)}</option>`).join('');document.getElementById('searchClasses').innerHTML=dictFor(sg,'カード仕様・種別').map(v=>`<button class="${state.search.classTag===v?'active':''}" data-search-class="${esc(v)}">${esc(v)}</button>`).join('');document.getElementById('searchGoodsCategories').innerHTML=dictFor(sg,'グッズ分類タグ').map(v=>`<button class="${state.search.goodsCategory===v?'active':''}" data-search-goods-category="${esc(v)}">${esc(v)}</button>`).join('');document.querySelectorAll('#searchVisualTabs button').forEach(b=>b.classList.toggle('active',b.dataset.searchVisualTab===state.search.visualTab));const visualType=state.search.visualTab==='length'?'キービジュアル・長さ':state.search.visualTab==='accessory'?'キービジュアル・小物':'キービジュアル・髪色';const visualKey=state.search.visualTab==='length'?'visualLength':state.search.visualTab==='accessory'?'visualAccessory':'visualHair';const visualAttr=state.search.visualTab==='length'?'data-search-visual-length':state.search.visualTab==='accessory'?'data-search-visual-accessory':'data-search-visual-hair';document.getElementById('searchVisualChoices').innerHTML=dictFor(sg,visualType).map(v=>`<button class="${state.search[visualKey]===v?'active':''}" ${visualAttr}="${esc(v)}">${esc(v)}</button>`).join('');document.getElementById('searchStatus').innerHTML=[['owned','所持'],['missing','未所持'],['trade','譲']].map(([v,l])=>`<button class="${state.search.status===v?'active':''}" data-search-status="${v}">${l}</button>`).join('')}
 function askDelete(kind,id){state.deleteTarget={kind,id};document.getElementById('confirm').classList.add('show')}
-function doDelete(){
+async function doDelete(){
   const t=state.deleteTarget;
   if(!t)return;
+  const item=t.kind==='card'?(db.cards||[]).find(c=>c.id===t.id):(db.goods||[]).find(g=>g.id===t.id);
+  const hasEncyclopedia=!!item?.encyclopediaId;
   if(t.kind==='card')db.cards=db.cards.filter(c=>c.id!==t.id);
   else db.goods=db.goods.filter(g=>g.id!==t.id);
   const saved=saveDB();
   document.getElementById('confirm').classList.remove('show');
   if(!saved)return;
-  toast(t.kind==='card'?'カードを削除しました':'グッズを削除しました',1800);
+  let zukanDeleted=true;
+  if(hasEncyclopedia)zukanDeleted=await deleteEncyclopediaItem(item);
+  const label=t.kind==='card'?'カード':'グッズ';
+  toast(zukanDeleted?(label+'を削除しました'):(label+'を削除しました（図鑑の削除はできませんでした）'),2200);
   state.deleteTarget=null;
   state.selected=null;
   go('list');
@@ -1186,7 +1237,15 @@ function saveCard(cont){
     if(!saveDB())return;
     const id=c.id;
     state.editCardId=null;
-    toast('変更を保存しました',1800);
+    /* 図鑑登録済みなら、同じ図鑑データも更新する。未登録なら今までどおり自分のカードだけ変更。 */
+    if(c.encyclopediaId){
+      syncEncyclopediaItem(c,'card').then(function(ok){
+        if(ok) toast('変更を保存しました（図鑑も更新）',1800);
+        else toast('変更を保存しました',1800);
+      });
+    }else{
+      toast('変更を保存しました',1800);
+    }
     state.selected=id;state.group=c.group;state.member=c.member;go('detail');
     return;
   }
@@ -1195,7 +1254,7 @@ function saveCard(cont){
     id:'c_'+Date.now(),group:state.regGroup,member:state.regMember,album:state.regAlbum,
     event:state.regEvent,shop:state.regShop||'',tag:state.regClass,visual:[...state.regVisual],
     status:state.regStatus,qty:state.regStatus==='owned'?state.regQty:0,wish:false,like:false,
-    front:state.front||'',back:state.back||'',memo:state.memo
+    front:state.front||'',back:state.back||'',memo:state.memo,encyclopediaId:null
   };
 
   db.cards.unshift(c);
@@ -1205,7 +1264,7 @@ function saveCard(cont){
   }
   openEncyclopediaChoice(c,'card',cont);
 }
-function saveGoods(){const name=document.getElementById('goodsName').value.trim();if(!name){toast('グッズ名を入力してください');return}if(state.editGoodsId){const g=db.goods.find(x=>x.id===state.editGoodsId);if(!g)return;g.group=state.goodsGroup;g.member=state.goodsMember||'OTHER';g.name=name;g.category=document.getElementById('goodsCategory').value;g.status=state.goodsStatus;g.qty=state.goodsStatus==='owned'?state.goodsQty:0;g.front=state.goodsFront;g.back=state.goodsBack;g.memo=document.getElementById('goodsMemo').value;saveDB();const id=g.id;state.editGoodsId=null;toast('変更を保存しました');state.selected=id;state.group=g.group;go('goodsDetail');return}const g={id:'g_'+Date.now(),group:state.goodsGroup,member:state.goodsMember||'OTHER',name,category:document.getElementById('goodsCategory').value,status:state.goodsStatus,qty:state.goodsStatus==='owned'?state.goodsQty:0,wish:false,like:false,front:state.goodsFront,back:state.goodsBack,memo:document.getElementById('goodsMemo').value};db.goods.unshift(g);saveDB();openEncyclopediaChoice(g,'goods',false)}
+function saveGoods(){const name=document.getElementById('goodsName').value.trim();if(!name){toast('グッズ名を入力してください');return}if(state.editGoodsId){const g=db.goods.find(x=>x.id===state.editGoodsId);if(!g)return;g.group=state.goodsGroup;g.member=state.goodsMember||'OTHER';g.name=name;g.category=document.getElementById('goodsCategory').value;g.status=state.goodsStatus;g.qty=state.goodsStatus==='owned'?state.goodsQty:0;g.front=state.goodsFront;g.back=state.goodsBack;g.memo=document.getElementById('goodsMemo').value;saveDB();const id=g.id;state.editGoodsId=null;if(g.encyclopediaId){syncEncyclopediaItem(g,'goods').then(function(ok){if(ok)toast('変更を保存しました（図鑑も更新）');else toast('変更を保存しました')})}else{toast('変更を保存しました')}state.selected=id;state.group=g.group;go('goodsDetail');return}const g={id:'g_'+Date.now(),group:state.goodsGroup,member:state.goodsMember||'OTHER',name,category:document.getElementById('goodsCategory').value,status:state.goodsStatus,qty:state.goodsStatus==='owned'?state.goodsQty:0,wish:false,like:false,front:state.goodsFront,back:state.goodsBack,memo:document.getElementById('goodsMemo').value,encyclopediaId:null};db.goods.unshift(g);saveDB();openEncyclopediaChoice(g,'goods',false)}
 function compressPhotoForIPhone(file,done){
   if(!file){done('');return}
   const reader=new FileReader();
@@ -1514,6 +1573,19 @@ body:not(.home) .header-detail-search{
   top:calc(500px - env(safe-area-inset-top,0px)) !important;
 }
 </style>
+<style id="pocalog-home-male-binder-position-fix">
+/* HOME：男子バインダーを少し上へ。トップバーとボトムバーは固定したまま。 */
+#home .home-bg-svg{
+  transform:translateY(-22px)!important;
+}
+#home .home-profile-title,
+#home .home-hot.logo,
+#home .home-hot.search,
+#home .home-nav-hot{
+  transform:none!important;
+}
+</style>
+
 </body>
 </html>
 
