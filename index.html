@@ -722,7 +722,7 @@ body{min-height:100dvh}
 
   <section class="screen" id="encyclopedia"><div class="top dict-top"><button type="button" class="back" data-back aria-label="戻る">‹</button><div class="title dict-centered-title">図鑑</div><button class="tool dict-search-right" data-open-search aria-label="詳細検索"><svg class="search-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5H15M3 9H15M3 13H15M6 3V7M12 7V11M8 11V15"/></svg></button></div><div class="zukan-wrap"><div class="zukan-head"><div class="zukan-type-tabs" id="zukanTypes"><button type="button" class="zukan-type-tab" data-zukan-type="card">CARD</button><button type="button" class="zukan-type-tab" data-zukan-type="goods">GOODS</button></div><div class="zukan-group-tabs" id="zukanGroups"></div><div class="zukan-member-tabs" id="zukanMembers"></div><input class="zukan-search" id="zukanSearch" placeholder="メンバー・アルバム・タグを検索"></div><div class="zukan-filterbar"><button class="zukan-all active" id="zukanAll">ALL</button><span class="zukan-count" id="zukanCount"></span></div><div class="zukan-grid" id="zukanGrid"></div></div><div class="nav" id="navEncyclopedia"></div></section>
 <section class="screen" id="dictionary"><div class="top dict-top"><button type="button" class="dict-brand-logo" data-nav="home" aria-label="HOMEへ戻る"></button><div class="title data-left-title">Data</div><button class="tool dict-search-right" data-open-search aria-label="詳細検索"><svg class="search-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5H15M3 9H15M3 13H15M6 3V7M12 7V11M8 11V15"/></svg></button></div><section class="mypage-card data-management-card" id="myPageCard"><div><div class="mypage-kicker">MY Page</div><h3>マイページ</h3><p>ニックネームや共有用IDなど、自分のプロフィールを設定します。</p></div><button class="mypage-open" data-open-mypage>登録・編集</button></section><button type="button" class="mypage-card data-management-card" id="encyclopediaCard" data-nav="encyclopedia" style="width:calc(100% - 24px);text-align:left;cursor:pointer"><div><h3>図鑑</h3><p class="encyclopedia-intro-copy">みんなのコレクションが集まる図鑑。<br>まだ持っていないカードとの出会いも、ここから。</p></div><span class="mypage-open" style="display:flex;align-items:center;justify-content:center">開く</span></button><div class="data-dictionary-label">辞書登録一覧</div><div class="dict" id="dictRows"></div><div class="nav" id="navDictionary"></div></section>
-  <section class="screen" id="myPage"><div class="top"><div class="left"><button class="back" data-back>‹</button><div class="title">MY Page</div></div><button class="tool" data-open-search aria-label="詳細検索"><svg class="search-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5H15M3 9H15M3 13H15M6 3V7M12 7V11M8 11V15"/></svg></button></div><div class="mypage-editor"><div class="mypage-intro"><div class="mypage-kicker">MY Page</div><h2>プロフィール情報</h2><p>PocaLogで表示するニックネームを設定できます。</p></div><div class="field"><label>ニックネーム（12文字まで）</label><input class="input" id="profileNickname" maxlength="12" placeholder="例：chan"></div><button class="primary mypage-save" id="saveProfile">ニックネームを保存</button><div class="cloud-account-card" id="cloudAccountCard"><div><div class="cloud-kicker">DATA SYNC</div><h3>データの引き継ぎ</h3><p id="cloudAccountStatus">匿名アカウントでこの端末のデータを保存しています。</p></div><div class="cloud-actions"><button type="button" class="secondary" data-link-provider="apple">Appleで連携・引き継ぎ</button><button type="button" class="secondary" data-link-provider="google">Googleで連携・引き継ぎ</button></div></div></div><div class="nav" id="navMyPage"></div></section>
+  <section class="screen" id="myPage"><div class="top"><div class="left"><button class="back" data-back>‹</button><div class="title">MY Page</div></div><button class="tool" data-open-search aria-label="詳細検索"><svg class="search-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5H15M3 9H15M3 13H15M6 3V7M12 7V11M8 11V15"/></svg></button></div><div class="mypage-editor"><div class="mypage-intro"><div class="mypage-kicker">MY Page</div><h2>プロフィール情報</h2><p>PocaLogで表示するニックネームを設定できます。</p></div><div class="field"><label>ニックネーム（12文字まで）</label><input class="input" id="profileNickname" maxlength="12" placeholder="例：chan"></div><button class="primary mypage-save" id="saveProfile">ニックネームを保存</button><div class="cloud-account-card" id="cloudAccountCard"><div><div class="cloud-kicker">DATA SYNC</div><h3>データの引き継ぎ</h3><p id="cloudAccountStatus">匿名アカウントでこの端末のデータを保存しています。</p></div><div class="cloud-actions"><button type="button" class="secondary" id="accountOpen">アカウント設定</button></div></div></div><div class="nav" id="navMyPage"></div></section>
   <section class="screen" id="dictEditor"><div class="top"><div class="left"><button class="back" data-back>‹</button><div class="title" id="dictTitle">アルバム・作品登録</div></div><button class="tool"><svg class="search-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5H15M3 9H15M3 13H15M6 3V7M12 7V11M8 11V15"/></svg></button></div><div class="dict-editor"><div class="field" id="dictGroupField"><label>登録先</label><select class="select" id="dictGroup"></select></div><div class="dict-sortbar hidden" id="dictSortBar"><select class="dict-sort-select" id="dictSortSelect"><option value="registered" ${state.dictSort==='registered'||!state.dictSort?'selected':''}>登録順</option><option value="releaseOld" ${state.dictSort==='releaseOld'?'selected':''}>発売日順（古い→新しい）</option><option value="releaseNew" ${state.dictSort==='releaseNew'?'selected':''}>発売日順（新しい→古い）</option><option value="az" ${state.dictSort==='az'?'selected':''}>あいうえお順</option></select></div><div id="dictItems"></div><button class="dict-add" id="dictAdd">＋ 新規登録</button><div class="form-actions"><button class="secondary" data-back>キャンセル</button><button class="primary" id="dictSave">この内容で登録</button></div></div><div class="nav" id="navDictEditor"></div></section>
 
   <section class="screen" id="wishlist"><div class="scroll"><div class="top"><div class="left"><button type="button" class="dict-brand-logo feed-home-logo" data-nav="home" aria-label="HOMEへ戻る"></button><div class="title">Wish</div></div><button class="tool" data-open-search><svg class="search-icon" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5H15M3 9H15M3 13H15M6 3V7M12 7V11M8 11V15"/></svg></button></div><div class="feed-type-tabs" data-feed-kind="wish"><button class="active" data-feed-type="all">ALL</button><button data-feed-type="card">CARD</button><button data-feed-type="goods">GOODS</button></div><div class="content" id="wishItems"></div></div><div class="nav" id="navWish"></div></section>
@@ -745,6 +745,7 @@ body{min-height:100dvh}
       </div>
     </div>
   </div>
+  <div class="confirm" id="accountModal" style="z-index:1000"><div class="confirm-box" style="max-width:360px"><h3 id="accountModalTitle">PocaLogアカウント</h3><div id="accountRegisterForm"><p style="margin:0 0 12px">PocaLog IDとパスワードを設定すると、ブックマークを削除してもデータを復元できます。</p><input class="input" id="accountIdInput" maxlength="20" autocomplete="username" placeholder="PocaLog ID（英数字・_）"><input class="input" id="accountPasswordInput" type="password" maxlength="72" autocomplete="new-password" placeholder="パスワード（8文字以上）" style="margin-top:8px"><input class="input" id="accountPasswordConfirm" type="password" maxlength="72" autocomplete="new-password" placeholder="パスワード（確認）" style="margin-top:8px"><div class="confirm-actions" style="margin-top:12px"><button type="button" data-account-close>あとで</button><button class="yes" type="button" data-account-register>アカウントを作成</button></div><button type="button" data-account-show-login style="margin-top:10px;background:none;border:0;color:#666;text-decoration:underline">すでにアカウントがある → ログイン</button></div><div id="accountLoginForm" style="display:none"><p style="margin:0 0 12px">PocaLog IDとパスワードでデータを復元します。</p><input class="input" id="accountLoginId" maxlength="20" autocomplete="username" placeholder="PocaLog ID"><input class="input" id="accountLoginPassword" type="password" maxlength="72" autocomplete="current-password" placeholder="パスワード" style="margin-top:8px"><div class="confirm-actions" style="margin-top:12px"><button type="button" data-account-close>閉じる</button><button class="yes" type="button" data-account-login>ログイン</button></div><button type="button" data-account-show-recovery style="margin-top:10px;background:none;border:0;color:#666;text-decoration:underline">パスワードを忘れた</button><button type="button" data-account-show-register style="margin-top:6px;background:none;border:0;color:#666;text-decoration:underline">新しくアカウントを作る</button></div><div id="accountRecoveryForm" style="display:none"><p style="margin:0 0 12px">登録時に表示された復元コードを入力して、新しいパスワードを設定します。</p><input class="input" id="accountRecoveryId" maxlength="20" placeholder="PocaLog ID"><input class="input" id="accountRecoveryCode" maxlength="32" placeholder="復元コード" style="margin-top:8px"><input class="input" id="accountRecoveryPassword" type="password" maxlength="72" placeholder="新しいパスワード（8文字以上）" style="margin-top:8px"><input class="input" id="accountRecoveryPasswordConfirm" type="password" maxlength="72" placeholder="新しいパスワード（確認）" style="margin-top:8px"><div class="confirm-actions" style="margin-top:12px"><button type="button" data-account-show-login>戻る</button><button class="yes" type="button" data-account-recover>パスワードを変更</button></div></div><div id="accountRecoveryCodeBox" style="display:none"><p style="margin:0 0 8px">この復元コードはパスワードを忘れたときに使います。今だけ表示します。</p><div id="accountRecoveryCodeDisplay" style="font-size:18px;font-weight:700;letter-spacing:1px;text-align:center;padding:14px;background:#f5f5f5;border-radius:12px;user-select:text"></div><div class="confirm-actions" style="margin-top:12px"><button type="button" data-account-copy-recovery>コピー</button><button class="yes" type="button" data-account-finish>保存しました</button></div></div><p id="accountModalError" style="color:#c33;font-size:13px;margin:10px 0 0"></p></div></div>
   <div class="confirm" id="confirm"><div class="confirm-box"><h3>削除しますか？</h3><p>この項目をコレクションから削除します。削除後は元に戻せません。</p><div class="confirm-actions"><button data-cancel-delete>キャンセル</button><button class="yes" data-confirm-delete>削除する</button></div></div></div>
   <div class="toast" id="toast"></div>
 </div>
@@ -769,6 +770,82 @@ async function ensureCloudUser(){
     return null;
   }
 }
+
+function pocaEmail(id){return `${String(id||'').trim().toLowerCase()}@pocalog.local`}
+function validPocaId(id){return /^[a-z0-9_]{4,20}$/.test(String(id||'').trim().toLowerCase())}
+function validPassword(p){return typeof p==='string'&&p.length>=8}
+function randomRecoveryCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const a=new Uint32Array(16);crypto.getRandomValues(a);let out=[];for(let i=0;i<16;i++)out.push(chars[a[i]%chars.length]);return 'PCL-'+out.slice(0,4).join('')+'-'+out.slice(4,8).join('')+'-'+out.slice(8,12).join('')+'-'+out.slice(12,16).join('')}
+async function hashText(value){const bytes=new TextEncoder().encode(String(value));const hash=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('')}
+async function ensureCloudUser(){
+  try{
+    const {data:{session}}=await supabaseClient.auth.getSession();
+    if(session?.user){cloudState.user=session.user;cloudState.ready=true;return session.user;}
+    cloudState.user=null;cloudState.ready=false;return null;
+  }catch(err){console.warn('PocaLog cloud auth unavailable:',err);cloudState.ready=false;return null;}
+}
+function accountModal(show='register'){
+ const m=document.getElementById('accountModal');if(!m)return; m.style.display='flex';
+ document.getElementById('accountRegisterForm').style.display=show==='register'?'block':'none';
+ document.getElementById('accountLoginForm').style.display=show==='login'?'block':'none';
+ document.getElementById('accountRecoveryForm').style.display=show==='recovery'?'block':'none';
+ document.getElementById('accountRecoveryCodeBox').style.display=show==='code'?'block':'none';
+ document.getElementById('accountModalError').textContent='';
+ document.getElementById('accountModalTitle').textContent=show==='code'?'復元コードを保存':show==='recovery'?'パスワードを復元':show==='login'?'ログイン':'PocaLogアカウント';
+}
+function closeAccountModal(){const m=document.getElementById('accountModal');if(m)m.style.display='none'}
+function accountError(msg){const e=document.getElementById('accountModalError');if(e)e.textContent=msg}
+async function storeRecoveryCode(code){
+ const hash=await hashText(code);
+ const {error}=await supabaseClient.from('pocalog_recovery').upsert({user_id:cloudState.user.id,recovery_code_hash:hash,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+ if(error)throw error;
+}
+async function registerPocaAccount(){
+ const id=String(document.getElementById('accountIdInput').value||'').trim().toLowerCase();
+ const pw=document.getElementById('accountPasswordInput').value||''; const pw2=document.getElementById('accountPasswordConfirm').value||'';
+ if(!validPocaId(id)){accountError('IDは4〜20文字の英小文字・数字・_で入力してください。');return}
+ if(!validPassword(pw)){accountError('パスワードは8文字以上にしてください。');return}
+ if(pw!==pw2){accountError('パスワードが一致していません。');return}
+ try{
+   let user=cloudState.user;
+   if(user?.is_anonymous){
+     const {data,error}=await supabaseClient.auth.updateUser({email:pocaEmail(id),password:pw,data:{pocalog_id:id}});
+     if(error)throw error; user=data.user;
+   }else if(user){accountError('すでにログインしています。');return}
+   else{
+     const {data,error}=await supabaseClient.auth.signUp({email:pocaEmail(id),password:pw,options:{data:{pocalog_id:id}}});
+     if(error)throw error; user=data.user;
+     if(!user)throw new Error('アカウントを作成できませんでした');
+   }
+   cloudState.user=user;cloudState.ready=true;
+   const code=randomRecoveryCode(); await storeRecoveryCode(code);
+   db.profile.id=id;saveDB();await saveCloudProfile();
+   await syncCollectionToCloud();
+   document.getElementById('accountRecoveryCodeDisplay').textContent=code; accountModal('code');
+   updateCloudStatus('同期済み'); render();
+ }catch(err){console.error(err);accountError('アカウントを作成できませんでした。IDがすでに使われている可能性があります。')}
+}
+async function loginPocaAccount(){
+ const id=String(document.getElementById('accountLoginId').value||'').trim().toLowerCase(); const pw=document.getElementById('accountLoginPassword').value||'';
+ if(!validPocaId(id)||!pw){accountError('PocaLog IDとパスワードを入力してください。');return}
+ try{
+   const {data,error}=await supabaseClient.auth.signInWithPassword({email:pocaEmail(id),password:pw}); if(error)throw error;
+   cloudState.user=data.user;cloudState.ready=true;db.profile.id=id;saveDB();
+   await loadCloudProfile(); const had=await loadCollectionFromCloud(); if(!had)await syncCollectionToCloud();
+   closeAccountModal();updateCloudStatus('同期済み');render();toast('データを復元しました',1800);
+ }catch(err){console.error(err);accountError('IDまたはパスワードが違います。')}
+}
+async function recoverPocaPassword(){
+ const id=String(document.getElementById('accountRecoveryId').value||'').trim().toLowerCase(); const code=document.getElementById('accountRecoveryCode').value.trim(); const pw=document.getElementById('accountRecoveryPassword').value||''; const pw2=document.getElementById('accountRecoveryPasswordConfirm').value||'';
+ if(!validPocaId(id)||!code||!validPassword(pw)){accountError('ID・復元コード・8文字以上の新しいパスワードを入力してください。');return}
+ if(pw!==pw2){accountError('新しいパスワードが一致していません。');return}
+ try{
+   const res=await fetch(`${SUPABASE_URL}/functions/v1/pocalog-reset-password`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':`Bearer ${SUPABASE_PUBLISHABLE_KEY}`},body:JSON.stringify({pocalog_id:id,recovery_code:code,new_password:pw})});
+   const data=await res.json().catch(()=>({})); if(!res.ok||!data.ok)throw new Error(data.error||'reset failed');
+   document.getElementById('accountLoginId').value=id; document.getElementById('accountLoginPassword').value=pw; accountModal('login'); accountError('パスワードを変更しました。ログインしてください。');
+ }catch(err){console.error(err);accountError('復元コードが違うか、復元機能の設定がまだ完了していません。')}
+}
+
+
 
 function cloudItemPayload(item,type){
   const copy=JSON.parse(JSON.stringify(item||{}));
@@ -1297,7 +1374,7 @@ app.addEventListener('click',async e=>{
   render();
   return;
  }
- const lp=e.target.closest('[data-link-provider]');if(lp){linkCloudProvider(lp.dataset.linkProvider);return}
+ const ao=e.target.closest('#accountOpen');if(ao){accountModal(cloudState.user?'login':'register');return}
  if(e.target.closest('[data-back]')){back();return}
  const hg=e.target.closest('[data-group]');if(hg){openGroup(hg.dataset.group);return}
  if(e.target.closest('[data-open-search]')){openSearch();return}
@@ -1395,6 +1472,15 @@ document.getElementById('saveCard').onclick=function(e){
   saveCard(false);
 };
 document.getElementById('saveGoods').addEventListener('click',()=>saveGoods());
+document.querySelectorAll('[data-account-close]').forEach(b=>b.addEventListener('click',closeAccountModal));
+document.querySelectorAll('[data-account-show-login]').forEach(b=>b.addEventListener('click',()=>accountModal('login')));
+document.querySelectorAll('[data-account-show-register]').forEach(b=>b.addEventListener('click',()=>accountModal('register')));
+document.querySelectorAll('[data-account-show-recovery]').forEach(b=>b.addEventListener('click',()=>accountModal('recovery')));
+document.querySelector('[data-account-register]').addEventListener('click',registerPocaAccount);
+document.querySelector('[data-account-login]').addEventListener('click',loginPocaAccount);
+document.querySelector('[data-account-recover]').addEventListener('click',recoverPocaPassword);
+document.querySelector('[data-account-copy-recovery]').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(document.getElementById('accountRecoveryCodeDisplay').textContent);toast('復元コードをコピーしました',1400)}catch(_){toast('コードを長押ししてコピーしてください',1800)}});
+document.querySelector('[data-account-finish]').addEventListener('click',closeAccountModal);
 document.querySelector('[data-encyclopedia-yes]').addEventListener('click',()=>confirmEncyclopediaChoice(true));
 document.querySelector('[data-encyclopedia-no]').addEventListener('click',()=>confirmEncyclopediaChoice(false));
 function openDictAdd(){const targetType=state.regDictAddType|| (state.dictType==='キービジュアル'?(state.dictVisualType||'キービジュアル・髪色'):state.dictType);state.dictVisualType=targetType;document.getElementById('dictAddTitle').textContent=(targetType==='キービジュアル・長さ'?'髪の長さ':targetType==='キービジュアル・小物'?'小物':targetType==='キービジュアル・髪色'?'髪色':targetType)+'を新規登録';const input=document.getElementById('dictAddInput');input.value='';const date=document.getElementById('dictAddDate');date.value='';date.classList.toggle('show',targetType==='アルバム・作品');document.getElementById('dictAddSheet').classList.add('show');setTimeout(()=>input.focus(),80)}
