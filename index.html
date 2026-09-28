@@ -893,6 +893,14 @@ async function syncCollectionToCloud(){
     const userId=cloudState.user.id;
     const all=[...(db.cards||[]).map(x=>({item:x,type:'card'})),...(db.goods||[]).map(x=>({item:x,type:'goods'}))];
     const rows=[];
+    /* 辞書も同じユーザー領域へ保存する。カードとは別の専用行なので、再ログイン後も復元できる。 */
+    rows.push({
+      user_id:userId,
+      item_id:'__pocalog_dictionary__',
+      item_type:'dictionary',
+      data:{dictByGroup:db.dictByGroup||{},dictCommon:db.dictCommon||{},albumMeta:db.albumMeta||{}},
+      updated_at:new Date().toISOString()
+    });
     for(const entry of all){
       const payload=cloudItemPayload(entry.item,entry.type);
       const uploadedFront=entry.item.front?await uploadCloudImage(userId,entry.item.id,'front',entry.item.front):'';
@@ -908,6 +916,7 @@ async function syncCollectionToCloud(){
     const {data:remote,error:remoteErr}=await supabaseClient.from('pocalog_user_items').select('item_id').eq('user_id',userId);
     if(remoteErr)throw remoteErr;
     const localIds=new Set(all.map(x=>String(x.item.id)));
+    localIds.add('__pocalog_dictionary__');
     const stale=(remote||[]).map(x=>String(x.item_id)).filter(id=>!localIds.has(id));
     if(stale.length){
       const {error:delErr}=await supabaseClient.from('pocalog_user_items').delete().eq('user_id',userId).in('item_id',stale);
@@ -934,6 +943,14 @@ async function loadCollectionFromCloud(){
     if(!rows||!rows.length)return false;
     const cards=[],goods=[];
     for(const row of rows){
+      if(row.item_type==='dictionary'&&String(row.item_id)==='__pocalog_dictionary__'){
+        const d=row.data||{};
+        db.dictByGroup=d.dictByGroup||db.dictByGroup||{};
+        db.dictCommon=d.dictCommon||db.dictCommon||{};
+        db.albumMeta=d.albumMeta||db.albumMeta||{};
+        continue;
+      }
+      if(row.item_type!=='card'&&row.item_type!=='goods')continue;
       const item={...(row.data||{}),id:row.item_id};
       item.__cloudFrontPath=row.front_path||'';
       item.__cloudBackPath=row.back_path||'';
@@ -974,7 +991,11 @@ function updateCloudStatus(text){
 
 async function initCloudAccount(){
   const user=await ensureCloudUser();
-  if(!user)return;
+  if(!user){
+    /* セッションがない最初の起動だけログイン画面を表示。セッションが残っていれば自動ログインしてそのまま復元する。 */
+    accountModal('login');
+    return;
+  }
   await loadCloudProfile();
   const hadCloud=await loadCollectionFromCloud();
   if(!hadCloud)await syncCollectionToCloud();
