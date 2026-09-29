@@ -808,7 +808,7 @@ async function hashText(value){const bytes=new TextEncoder().encode(String(value
 async function ensureCloudUser(){
   try{
     const {data:{session}}=await supabaseClient.auth.getSession();
-    if(session?.user){cloudState.user=session.user;cloudState.ready=true;const savedId=session.user.user_metadata?.pocalog_id||'';if(savedId){db.profile=db.profile||{nickname:'',id:''};db.profile.id=savedId;localStorage.setItem('pocalog_last_id',savedId);saveDB();}return session.user;}
+    if(session?.user){cloudState.user=session.user;cloudState.ready=true;const savedId=session.user.user_metadata?.pocalog_id||'';if(savedId){db.profile=db.profile||{nickname:'',id:''};db.profile.id=savedId;localStorage.setItem('pocalog_last_id',savedId);}return session.user;}
     cloudState.user=null;cloudState.ready=false;return null;
   }catch(err){console.warn('PocaLog cloud auth unavailable:',err);cloudState.ready=false;return null;}
 }
@@ -859,8 +859,10 @@ async function loginPocaAccount(){
  if(!validPocaId(id)||!pw){accountError('PocaLog IDとパスワードを入力してください。');return}
  try{
    const {data,error}=await supabaseClient.auth.signInWithPassword({email:pocaEmail(id),password:pw}); if(error)throw error;
-   cloudState.user=data.user;cloudState.ready=true;db.profile.id=id;localStorage.setItem('pocalog_last_id',id);loadAccountLocalBackup();saveDB();
-   await loadCloudProfile(); const had=await loadCollectionFromCloud(); if(!had)await syncCollectionToCloud();
+   cloudState.user=data.user;cloudState.ready=true;db.profile.id=id;localStorage.setItem('pocalog_last_id',id);
+   await loadCloudProfile(); const cloudResult=await loadCollectionFromCloud();
+   if(!cloudResult.ok){updateCloudStatus('同期待ち');accountError('クラウドのデータを読み込めませんでした。端末側のデータで上書きしません。');return;}
+   saveDB();
    saveAccountLocalBackup();
    closeAccountModal();updateCloudStatus('同期済み');render();toast('データを復元しました',1800);
  }catch(err){console.error(err);accountError('IDまたはパスワードが違います。')}
@@ -907,14 +909,14 @@ async function signedCloudImage(path){
 }
 
 async function syncCollectionToCloud(){
-  if(!cloudState.ready||!cloudState.user)return;
-  if(cloudState.syncing){cloudState.syncRequested=true;return;}
+  if(!cloudState.ready||!cloudState.user)return false;
+  if(cloudState.restoring){cloudState.syncRequested=true;return false;}
+  if(cloudState.syncing){cloudState.syncRequested=true;return false;}
   cloudState.syncing=true;
   try{
     const userId=cloudState.user.id;
     const all=[...(db.cards||[]).map(x=>({item:x,type:'card'})),...(db.goods||[]).map(x=>({item:x,type:'goods'}))];
     const rows=[];
-    /* 辞書も同じユーザー領域へ保存する。カードとは別の専用行なので、再ログイン後も復元できる。 */
     rows.push({
       user_id:userId,
       item_id:'__pocalog_dictionary__',
@@ -924,15 +926,29 @@ async function syncCollectionToCloud(){
     });
     for(const entry of all){
       const payload=cloudItemPayload(entry.item,entry.type);
-      const uploadedFront=entry.item.front?await uploadCloudImage(userId,entry.item.id,'front',entry.item.front):'';
-      const uploadedBack=entry.item.back?await uploadCloudImage(userId,entry.item.id,'back',entry.item.back):'';
-      payload.front_path=uploadedFront||entry.item.__cloudFrontPath||'';
-      payload.back_path=uploadedBack||entry.item.__cloudBackPath||'';
+      payload.front_path=entry.item.__cloudFrontPath||'';
+      payload.back_path=entry.item.__cloudBackPath||'';
       rows.push(payload);
     }
     if(rows.length){
       const {error}=await supabaseClient.from('pocalog_user_items').upsert(rows,{onConflict:'user_id,item_id'});
       if(error)throw error;
+    }
+    /* カード本体を先に保存し、画像アップロード失敗でカード全体が未保存になることを防ぐ。 */
+    for(const entry of all){
+      const itemId=String(entry.item.id);
+      let frontPath=entry.item.__cloudFrontPath||'';
+      let backPath=entry.item.__cloudBackPath||'';
+      try{
+        if(entry.item.front)frontPath=await uploadCloudImage(userId,itemId,'front',entry.item.front)||frontPath;
+      }catch(err){console.warn('PocaLog front image sync error:',err)}
+      try{
+        if(entry.item.back)backPath=await uploadCloudImage(userId,itemId,'back',entry.item.back)||backPath;
+      }catch(err){console.warn('PocaLog back image sync error:',err)}
+      if(frontPath!== (entry.item.__cloudFrontPath||'') || backPath!== (entry.item.__cloudBackPath||'')){
+        const {error}=await supabaseClient.from('pocalog_user_items').update({front_path:frontPath,back_path:backPath,updated_at:new Date().toISOString()}).eq('user_id',userId).eq('item_id',itemId);
+        if(error)throw error;
+      }
     }
     const {data:remote,error:remoteErr}=await supabaseClient.from('pocalog_user_items').select('item_id').eq('user_id',userId);
     if(remoteErr)throw remoteErr;
@@ -944,27 +960,29 @@ async function syncCollectionToCloud(){
       if(delErr)throw delErr;
     }
     updateCloudStatus('同期済み');
+    return true;
   }catch(err){
     console.warn('PocaLog cloud sync error:',err);
     updateCloudStatus('同期待ち');
+    return false;
   }finally{
     cloudState.syncing=false;
     if(cloudState.syncRequested){cloudState.syncRequested=false;queueCloudSync();}
   }
 }
-
 function queueCloudSync(){
   if(!cloudState.ready)return;
+  if(cloudState.restoring){cloudState.syncRequested=true;return;}
   clearTimeout(cloudState.timer);
   cloudState.timer=setTimeout(()=>syncCollectionToCloud(),500);
 }
 
 async function loadCollectionFromCloud(){
-  if(!cloudState.ready||!cloudState.user)return false;
+  if(!cloudState.ready||!cloudState.user)return {ok:false,found:false};
   try{
     const {data:rows,error}=await supabaseClient.from('pocalog_user_items').select('*').eq('user_id',cloudState.user.id).order('updated_at',{ascending:false});
     if(error)throw error;
-    if(!rows||!rows.length)return false;
+    if(!rows||!rows.length)return {ok:true,found:false};
     const cards=[],goods=[];
     for(const row of rows){
       if(row.item_type==='dictionary'&&String(row.item_id)==='__pocalog_dictionary__'){
@@ -983,13 +1001,12 @@ async function loadCollectionFromCloud(){
       if(row.item_type==='goods')goods.push(item);else cards.push(item);
     }
     db.cards=cards;db.goods=goods;saveDB();
-    return true;
+    return {ok:true,found:true};
   }catch(err){
     console.warn('PocaLog cloud load error:',err);
-    return false;
+    return {ok:false,found:false};
   }
 }
-
 async function saveCloudProfile(){
   if(!cloudState.ready||!cloudState.user)return;
   const nickname=(db.profile?.nickname||'').trim();
@@ -1002,7 +1019,7 @@ async function loadCloudProfile(){
   try{
     const {data,error}=await supabaseClient.from('pocalog_profiles').select('nickname').eq('id',cloudState.user.id).maybeSingle();
     if(error)throw error;
-    if(data?.nickname){db.profile.nickname=data.nickname;saveDB();}
+    if(data?.nickname){db.profile.nickname=data.nickname;}
   }catch(err){console.warn('PocaLog profile load error:',err)}
 }
 
@@ -1020,14 +1037,22 @@ async function initCloudAccount(){
     accountModal('login');
     return;
   }
-  loadAccountLocalBackup();
-  await loadCloudProfile();
-  const hadCloud=await loadCollectionFromCloud();
-  if(!hadCloud)await syncCollectionToCloud();
-  else await syncCollectionToCloud();
-  saveAccountLocalBackup();
-  updateCloudStatus('同期済み');
-  render();
+  cloudState.restoring=true;
+  try{
+    await loadCloudProfile();
+    const cloudResult=await loadCollectionFromCloud();
+    if(!cloudResult.ok){
+      updateCloudStatus('同期待ち');
+      render();
+      return;
+    }
+    saveAccountLocalBackup();
+    updateCloudStatus('同期済み');
+    render();
+  }finally{
+    cloudState.restoring=false;
+    if(cloudState.syncRequested){cloudState.syncRequested=false;queueCloudSync();}
+  }
 }
 
 async function linkCloudProvider(provider){
