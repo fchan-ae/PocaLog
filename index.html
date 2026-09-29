@@ -1227,6 +1227,7 @@ async function confirmEncyclopediaChoice(yes){const p=state.encyclopediaPending;
 function openSearch(){state.search.type=state.type||'card';renderSearch();document.getElementById('searchPanel').classList.add('show')}
 function closeSearch(){document.getElementById('searchPanel').classList.remove('show')}
 function searchTokens(text){return String(text||'').trim().toLocaleLowerCase('ja-JP').split(/[+\s]+/).map(v=>v.trim()).filter(Boolean)}
+function normalizeSearchValue(v){return String(v??'').toLocaleLowerCase('ja-JP').replace(/[\s　]+/g,'').trim()}
 function registeredTime(item){
   const n=Number(item?.createdAt||item?.created_at||0);
   if(Number.isFinite(n)&&n>0)return n;
@@ -1242,30 +1243,43 @@ function sortItems(a){
   else if(state.sort==='qty-asc')arr.sort((a,b)=>(Number(a.qty)||0)-(Number(b.qty)||0));
   return arr
 }
+function cardSearchText(c){return normalizeSearchValue([
+  c.group||'',c.nickname||'',c.member||'',c.album||'',c.event||c.venue||'',c.tag||'',...(c.visual||[]),c.shop||'',c.status||''
+].join(' '))}
+function cardMatchesSearch(c,q){
+  if(q.group && String(c.group||'')!==String(q.group))return false;
+  if(q.member && q.member!=='ALL' && String(c.member||'')!==String(q.member))return false;
+  if(q.album && String(c.album||'')!==String(q.album))return false;
+  if(q.event && String(c.event||c.venue||'')!==String(q.event))return false;
+  if(q.classTag && String(c.tag||'')!==String(q.classTag))return false;
+  if(q.visualHair && !(c.visual||[]).some(v=>String(v)===String(q.visualHair)))return false;
+  if(q.visualLength && !(c.visual||[]).some(v=>String(v)===String(q.visualLength)))return false;
+  if(q.visualAccessory && !(c.visual||[]).some(v=>String(v)===String(q.visualAccessory)))return false;
+  if(q.status && String(c.status||'')!==String(q.status))return false;
+  const hay=cardSearchText(c);
+  const tokens=searchTokens(q.text);
+  if(tokens.length && !tokens.every(token=>hay.includes(normalizeSearchValue(token))))return false;
+  return true;
+}
 function filteredCards(){
- const q=state.search||{}; const detail=hasActiveDetailSearch(); let a=detail?[...db.cards]:db.cards.filter(c=>c.group===state.group);
- if(!detail){const memberFilter=state.member;if(memberFilter&&memberFilter!=='ALL')a=a.filter(c=>c.member===memberFilter)}
- if(q.group)a=a.filter(c=>String(c.group||'')===String(q.group));
- if(q.member&&q.member!=='ALL')a=a.filter(c=>String(c.member||'')===String(q.member));
- if(q.album)a=a.filter(c=>String(c.album||'')===String(q.album));
- if(q.event)a=a.filter(c=>String(c.event||c.venue||'')===String(q.event));
- if(q.classTag)a=a.filter(c=>String(c.tag||'')===String(q.classTag));
- if(q.visualHair)a=a.filter(c=>(c.visual||[]).some(v=>String(v)===String(q.visualHair)));
- if(q.visualLength)a=a.filter(c=>(c.visual||[]).some(v=>String(v)===String(q.visualLength)));
- if(q.visualAccessory)a=a.filter(c=>(c.visual||[]).some(v=>String(v)===String(q.visualAccessory)));
- if(q.status)a=a.filter(c=>String(c.status||'')===String(q.status));
- const tokens=searchTokens(q.text); if(tokens.length)a=a.filter(c=>{const hay=[c.group||'',c.nickname||'',c.member||'',c.album||'',c.event||c.venue||'',c.tag||'',...(c.visual||[])].join(' ').toLocaleLowerCase('ja-JP');return tokens.every(token=>hay.includes(token));});
- return sortItems(a)
+  const q=state.search||{};
+  const detail=hasActiveDetailSearch();
+  let a=detail?[...(db.cards||[])]:[...(db.cards||[])].filter(c=>c.group===state.group);
+  if(!detail){const memberFilter=state.member;if(memberFilter&&memberFilter!=='ALL')a=a.filter(c=>c.member===memberFilter)}
+  a=a.filter(c=>cardMatchesSearch(c,q));
+  return sortItems(a)
 }
 function filteredGoods(){
- const q=state.search||{}; const detail=hasActiveDetailSearch(); let a=detail?[...db.goods]:db.goods.filter(g=>g.group===state.group);
- if(!detail){const memberFilter=state.member;if(memberFilter&&memberFilter!=='ALL')a=a.filter(g=>(g.member||'OTHER')===memberFilter)}
- if(q.group)a=a.filter(g=>String(g.group||'')===String(q.group));
- if(q.member&&q.member!=='ALL')a=a.filter(g=>String(g.member||'OTHER')===String(q.member));
- if(q.goodsCategory)a=a.filter(g=>String(g.category||'')===String(q.goodsCategory));
- if(q.status)a=a.filter(g=>String(g.status||'')===String(q.status));
- const tokens=searchTokens(q.text); if(tokens.length)a=a.filter(g=>{const hay=[g.group||'',g.name||'',g.category||'',g.member||'OTHER'].join(' ').toLocaleLowerCase('ja-JP');return tokens.every(token=>hay.includes(token));});
- return sortItems(a)
+  const q=state.search||{};
+  const detail=hasActiveDetailSearch();
+  let a=detail?[...(db.goods||[])]:[...(db.goods||[])].filter(g=>g.group===state.group);
+  if(!detail){const memberFilter=state.member;if(memberFilter&&memberFilter!=='ALL')a=a.filter(g=>(g.member||'OTHER')===memberFilter)}
+  if(q.group)a=a.filter(g=>String(g.group||'')===String(q.group));
+  if(q.member&&q.member!=='ALL')a=a.filter(g=>String(g.member||'OTHER')===String(q.member));
+  if(q.goodsCategory)a=a.filter(g=>String(g.category||'')===String(q.goodsCategory));
+  if(q.status)a=a.filter(g=>String(g.status||'')===String(q.status));
+  const tokens=searchTokens(q.text); if(tokens.length)a=a.filter(g=>{const hay=normalizeSearchValue([g.group||'',g.name||'',g.category||'',g.member||'OTHER'].join(' '));return tokens.every(token=>hay.includes(normalizeSearchValue(token)))});
+  return sortItems(a)
 }
 function hasActiveDetailSearch(){const q=state.search||{};return !!(String(q.text||'').trim()||q.group||(q.member&&q.member!=='ALL')||q.album||q.event||q.classTag||q.visualHair||q.visualLength||q.visualAccessory||q.goodsCategory||q.status)}
 function setupHomeFullBgVar(){const img=document.querySelector('#home .home-bg-svg');if(img&&img.src)document.documentElement.style.setProperty('--home-full-bg',`url("${img.src}")`)}
