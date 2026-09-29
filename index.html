@@ -1226,7 +1226,7 @@ async function confirmEncyclopediaChoice(yes){const p=state.encyclopediaPending;
 
 function openSearch(){state.search.type=state.type||'card';renderSearch();document.getElementById('searchPanel').classList.add('show')}
 function closeSearch(){document.getElementById('searchPanel').classList.remove('show')}
-function searchTokens(text){return String(text||'').trim().toLocaleLowerCase('ja-JP').split(/[+\s]+/).map(v=>v.trim()).filter(Boolean)}
+function searchTokens(text){return String(text||'').trim().split(/[+＋]/).map(v=>v.trim()).filter(Boolean)}
 function normalizeSearchValue(v){return String(v??'').toLocaleLowerCase('ja-JP').replace(/[\s　]+/g,'').trim()}
 function registeredTime(item){
   const n=Number(item?.createdAt||item?.created_at||0);
@@ -1256,9 +1256,12 @@ function cardMatchesSearch(c,q){
   if(q.visualLength && !(c.visual||[]).some(v=>String(v)===String(q.visualLength)))return false;
   if(q.visualAccessory && !(c.visual||[]).some(v=>String(v)===String(q.visualAccessory)))return false;
   if(q.status && String(c.status||'')!==String(q.status))return false;
-  const hay=cardSearchText(c);
-  const tokens=searchTokens(q.text);
-  if(tokens.length && !tokens.every(token=>hay.includes(normalizeSearchValue(token))))return false;
+  const fields=[
+    c.group||'',c.nickname||'',c.member||'',c.album||'',c.event||c.venue||'',c.tag||'',
+    ...(c.visual||[]),c.shop||'',c.status||''
+  ].map(normalizeSearchValue).filter(Boolean);
+  const tokens=searchTokens(q.text).map(normalizeSearchValue).filter(Boolean);
+  if(tokens.length && !tokens.every(token=>fields.some(field=>field===token || field.includes(token))))return false;
   return true;
 }
 function filteredCards(){
