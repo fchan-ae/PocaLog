@@ -773,7 +773,7 @@ body{min-height:100dvh}
   <div class="confirm" id="accountModal" style="z-index:1000"><div class="confirm-box" style="max-width:360px"><h3 id="accountModalTitle">PocaLogアカウント</h3><div id="accountRegisterForm"><p style="margin:0 0 12px">PocaLog IDとパスワードを設定すると、ブックマークを削除してもデータを復元できます。</p><input class="input" id="accountIdInput" maxlength="20" autocomplete="username" placeholder="PocaLog ID（英数字・_）"><input class="input" id="accountPasswordInput" type="password" maxlength="72" autocomplete="new-password" placeholder="パスワード（8文字以上）" style="margin-top:8px"><input class="input" id="accountPasswordConfirm" type="password" maxlength="72" autocomplete="new-password" placeholder="パスワード（確認）" style="margin-top:8px"><div class="confirm-actions" style="margin-top:12px"><button type="button" data-account-close>あとで</button><button class="yes" type="button" data-account-register>アカウントを作成</button></div><button type="button" data-account-show-login style="margin-top:10px;background:none;border:0;color:#666;text-decoration:underline">すでにアカウントがある → ログイン</button></div><div id="accountLoginForm" style="display:none"><p style="margin:0 0 12px">PocaLog IDとパスワードでデータを復元します。</p><input class="input" id="accountLoginId" maxlength="20" autocomplete="username" placeholder="PocaLog ID"><input class="input" id="accountLoginPassword" type="password" maxlength="72" autocomplete="current-password" placeholder="パスワード" style="margin-top:8px"><div class="confirm-actions" style="margin-top:12px"><button type="button" data-account-close>閉じる</button><button class="yes" type="button" data-account-login>ログイン</button></div><button type="button" data-account-show-recovery style="margin-top:10px;background:none;border:0;color:#666;text-decoration:underline">パスワードを忘れた</button><button type="button" data-account-show-register style="margin-top:6px;background:none;border:0;color:#666;text-decoration:underline">新しくアカウントを作る</button></div><div id="accountRecoveryForm" style="display:none"><p style="margin:0 0 12px">登録時に表示された復元コードを入力して、新しいパスワードを設定します。</p><input class="input" id="accountRecoveryId" maxlength="20" placeholder="PocaLog ID"><input class="input" id="accountRecoveryCode" maxlength="32" placeholder="復元コード" style="margin-top:8px"><input class="input" id="accountRecoveryPassword" type="password" maxlength="72" placeholder="新しいパスワード（8文字以上）" style="margin-top:8px"><input class="input" id="accountRecoveryPasswordConfirm" type="password" maxlength="72" placeholder="新しいパスワード（確認）" style="margin-top:8px"><div class="confirm-actions" style="margin-top:12px"><button type="button" data-account-show-login>戻る</button><button class="yes" type="button" data-account-recover>パスワードを変更</button></div></div><div id="accountRecoveryCodeBox" style="display:none"><p style="margin:0 0 8px">この復元コードはパスワードを忘れたときに使います。今だけ表示します。</p><div id="accountRecoveryCodeDisplay" style="font-size:18px;font-weight:700;letter-spacing:1px;text-align:center;padding:14px;background:#f5f5f5;border-radius:12px;user-select:text"></div><div class="confirm-actions" style="margin-top:12px"><button type="button" data-account-copy-recovery>コピー</button><button class="yes" type="button" data-account-finish>保存しました</button></div></div><p id="accountModalError" style="color:#c33;font-size:13px;margin:10px 0 0"></p></div></div>
   <div class="confirm" id="confirm"><div class="confirm-box"><h3>削除しますか？</h3><p>この項目をコレクションから削除します。削除後は元に戻せません。</p><div class="confirm-actions"><button data-cancel-delete>キャンセル</button><button class="yes" data-confirm-delete>削除する</button></div></div></div>
   <div class="pocalog-report-modal" id="pocalogReportModal" aria-hidden="true"><div class="pocalog-report-panel"><h3>このカードを通報</h3><p>通報理由を選択してください</p><div class="pocalog-report-options"><button type="button" data-report-reason="inappropriate">不適切</button><button type="button" data-report-reason="spam_harassment">スパム・いやがらせ</button></div><div class="pocalog-report-actions"><button type="button" class="pocalog-report-cancel" data-report-cancel>キャンセル</button><button type="button" class="pocalog-report-send" data-report-send>通報する</button></div></div></div>
-  <div class="photo-crop-modal" id="photoCropModal" aria-hidden="true"><div class="photo-crop-panel"><div class="photo-crop-head"><button type="button" id="photoCropCancel">キャンセル</button><strong>写真をトリミング</strong><button type="button" id="photoCropApply">決定</button></div><div class="photo-crop-viewport" id="photoCropViewport"><img id="photoCropImage" alt="トリミングする写真"></div><div class="photo-crop-controls"><span>小</span><input id="photoCropZoom" type="range" min="1" max="3" step="0.01" value="1"><span>大</span></div><div class="photo-crop-controls"><span>−180°</span><input id="photoCropAngle" type="range" min="-180" max="180" step="1" value="0"><span>＋180°</span></div><p>写真をドラッグして位置を調整できます</p></div></div>
+  <div class="photo-crop-modal" id="photoCropModal" aria-hidden="true"><div class="photo-crop-panel"><div class="photo-crop-head"><button type="button" id="photoCropCancel">キャンセル</button><strong>写真をトリミング</strong><button type="button" id="photoCropApply">決定</button></div><div class="photo-crop-viewport" id="photoCropViewport"><img id="photoCropImage" alt="トリミングする写真"></div><p>1本指で移動・2本指でピンチして拡大縮小できます</p></div></div>
   <div class="toast" id="toast"></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -784,7 +784,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLI
 const CLOUD_BUCKET='pocalog-user-media';
 /* 公開版セーフティ機能：Supabase側の準備完了後に true にします。 */
 const PUBLIC_SAFETY_GATE_ENABLED=true;
-const cloudState={user:null,ready:false,syncing:false,timer:null};
+const cloudState={user:null,ready:false,syncing:false,timer:null,syncRequested:false};
 
 async function ensureCloudUser(){
   try{
@@ -808,12 +808,13 @@ async function hashText(value){const bytes=new TextEncoder().encode(String(value
 async function ensureCloudUser(){
   try{
     const {data:{session}}=await supabaseClient.auth.getSession();
-    if(session?.user){cloudState.user=session.user;cloudState.ready=true;return session.user;}
+    if(session?.user){cloudState.user=session.user;cloudState.ready=true;const savedId=session.user.user_metadata?.pocalog_id||'';if(savedId){db.profile=db.profile||{nickname:'',id:''};db.profile.id=savedId;localStorage.setItem('pocalog_last_id',savedId);saveDB();}return session.user;}
     cloudState.user=null;cloudState.ready=false;return null;
   }catch(err){console.warn('PocaLog cloud auth unavailable:',err);cloudState.ready=false;return null;}
 }
 function accountModal(show='register'){
  const m=document.getElementById('accountModal');if(!m)return; m.style.display='flex';
+ if(show==='login'){const savedId=(db?.profile?.id||localStorage.getItem('pocalog_last_id')||'').trim();const idEl=document.getElementById('accountLoginId');if(idEl&&!idEl.value)idEl.value=savedId;}
  document.getElementById('accountRegisterForm').style.display=show==='register'?'block':'none';
  document.getElementById('accountLoginForm').style.display=show==='login'?'block':'none';
  document.getElementById('accountRecoveryForm').style.display=show==='recovery'?'block':'none';
@@ -847,7 +848,7 @@ async function registerPocaAccount(){
    }
    cloudState.user=user;cloudState.ready=true;
    const code=randomRecoveryCode(); await storeRecoveryCode(code);
-   db.profile.id=id;saveDB();await saveCloudProfile();
+   db.profile.id=id;localStorage.setItem('pocalog_last_id',id);saveDB();await saveCloudProfile();
    await syncCollectionToCloud();
    document.getElementById('accountRecoveryCodeDisplay').textContent=code; accountModal('code');
    updateCloudStatus('同期済み'); render();
@@ -858,7 +859,7 @@ async function loginPocaAccount(){
  if(!validPocaId(id)||!pw){accountError('PocaLog IDとパスワードを入力してください。');return}
  try{
    const {data,error}=await supabaseClient.auth.signInWithPassword({email:pocaEmail(id),password:pw}); if(error)throw error;
-   cloudState.user=data.user;cloudState.ready=true;db.profile.id=id;saveDB();
+   cloudState.user=data.user;cloudState.ready=true;db.profile.id=id;localStorage.setItem('pocalog_last_id',id);saveDB();
    await loadCloudProfile(); const had=await loadCollectionFromCloud(); if(!had)await syncCollectionToCloud();
    closeAccountModal();updateCloudStatus('同期済み');render();toast('データを復元しました',1800);
  }catch(err){console.error(err);accountError('IDまたはパスワードが違います。')}
@@ -905,7 +906,8 @@ async function signedCloudImage(path){
 }
 
 async function syncCollectionToCloud(){
-  if(!cloudState.ready||!cloudState.user||cloudState.syncing)return;
+  if(!cloudState.ready||!cloudState.user)return;
+  if(cloudState.syncing){cloudState.syncRequested=true;return;}
   cloudState.syncing=true;
   try{
     const userId=cloudState.user.id;
@@ -944,7 +946,10 @@ async function syncCollectionToCloud(){
   }catch(err){
     console.warn('PocaLog cloud sync error:',err);
     updateCloudStatus('同期待ち');
-  }finally{cloudState.syncing=false;}
+  }finally{
+    cloudState.syncing=false;
+    if(cloudState.syncRequested){cloudState.syncRequested=false;queueCloudSync();}
+  }
 }
 
 function queueCloudSync(){
@@ -1321,7 +1326,7 @@ async function shareEncyclopediaItem(item,type){
  try{
    const payload=encyclopediaPayload(item,type);
    if(PUBLIC_SAFETY_GATE_ENABLED){
-     const {data,error}=await supabaseClient.functions.invoke('pocalog-publish-encyclopedia',{body:{item:payload,payload,type}});
+     const {data,error}=await supabaseClient.functions.invoke('pocalog-publish-encyclopedia',{body:{item,payload,type}});
      if(error)throw error;
      if(!data?.ok){toast(data?.message||'公開チェックに通りませんでした',2400);return false;}
      if(data?.id)item.encyclopediaId=data.id;
@@ -1340,7 +1345,7 @@ async function manageEncyclopediaItem(action,item,type){
   try{
     if(!item?.encyclopediaId)return false;
     const payload=encyclopediaPayload(item,type);
-    const {data,error}=await supabaseClient.functions.invoke('pocalog-manage-encyclopedia',{body:{action,id:item.encyclopediaId,item:payload,payload,type}});
+    const {data,error}=await supabaseClient.functions.invoke('pocalog-manage-encyclopedia',{body:{action,id:item.encyclopediaId,item,payload,type}});
     if(error)throw error;
     if(!data?.ok)return false;
     return true;
@@ -1650,7 +1655,9 @@ function commitDictAdd(){
        if(newDate)db.albumMeta[state.dictGroup][name]=newDate;
      }
    }
-   saveDB();closeDictAdd();state.dictEditIndex=null;state.dictEditOld='';state.dictEditType='';renderDictEditor();renderDictionary();
+   saveDB();
+   syncCollectionToCloud();
+   closeDictAdd();state.dictEditIndex=null;state.dictEditOld='';state.dictEditType='';renderDictEditor();renderDictionary();
    syncRenamedDictionaryItems(changed).then(()=>{});
    toast('変更しました');return;
  }
@@ -1712,15 +1719,15 @@ function saveCard(cont){
   openEncyclopediaChoice(c,'card',cont);
 }
 function saveGoods(){const name=document.getElementById('goodsName').value.trim();if(!name){toast('グッズ名を入力してください');return}if(state.editGoodsId){const g=db.goods.find(x=>x.id===state.editGoodsId);if(!g)return;g.group=state.goodsGroup;g.member=state.goodsMember||'OTHER';g.name=name;g.category=document.getElementById('goodsCategory').value;g.status=state.goodsStatus;g.qty=state.goodsStatus==='owned'?state.goodsQty:0;g.front=state.goodsFront;g.back=state.goodsBack;g.memo=document.getElementById('goodsMemo').value;saveDB();const id=g.id;state.editGoodsId=null;if(g.encyclopediaId){syncEncyclopediaItem(g,'goods').then(function(ok){if(ok)toast('変更を保存しました（図鑑も更新）');else toast('変更を保存しました')})}else{toast('変更を保存しました')}state.selected=id;state.group=g.group;go('goodsDetail');return}const g={id:'g_'+Date.now(),group:state.goodsGroup,member:state.goodsMember||'OTHER',name,category:document.getElementById('goodsCategory').value,status:state.goodsStatus,qty:state.goodsStatus==='owned'?state.goodsQty:0,wish:false,like:false,front:state.goodsFront,back:state.goodsBack,memo:document.getElementById('goodsMemo').value,encyclopediaId:null};db.goods.unshift(g);saveDB();openEncyclopediaChoice(g,'goods',false)}
-const photoCropState={key:'',input:null,img:null,baseScale:1,zoom:1,angle:0,offsetX:0,offsetY:0,aspect:55/86,drag:false,lastX:0,lastY:0};
+const photoCropState={key:'',input:null,img:null,baseScale:1,zoom:1,angle:0,offsetX:0,offsetY:0,aspect:55/86,drag:false,lastX:0,lastY:0,pointers:new Map(),pinchStartDist:0,pinchStartZoom:1,pinchStartAngle:0,gestureStartAngle:0};
 function photoCropOpen(key,input,file){
  const reader=new FileReader();
  reader.onload=function(){
    const img=new Image();
    img.onload=function(){
-     photoCropState.key=key;photoCropState.input=input;photoCropState.img=img;photoCropState.aspect=key==='goodsFront'||key==='goodsBack'?1:55/86;photoCropState.zoom=1;photoCropState.angle=0;photoCropState.offsetX=0;photoCropState.offsetY=0;
-     const modal=document.getElementById('photoCropModal');const vp=document.getElementById('photoCropViewport');const ci=document.getElementById('photoCropImage');const slider=document.getElementById('photoCropZoom');
-     vp.classList.toggle('goods',photoCropState.aspect===1);ci.src=reader.result;slider.value='1';document.getElementById('photoCropAngle').value='0';modal.classList.add('show');modal.setAttribute('aria-hidden','false');
+     photoCropState.key=key;photoCropState.input=input;photoCropState.img=img;photoCropState.aspect=key==='goodsFront'||key==='goodsBack'?1:55/86;photoCropState.zoom=1;photoCropState.angle=0;photoCropState.offsetX=0;photoCropState.offsetY=0;photoCropState.pointers.clear();
+     const modal=document.getElementById('photoCropModal');const vp=document.getElementById('photoCropViewport');const ci=document.getElementById('photoCropImage');
+     vp.classList.toggle('goods',photoCropState.aspect===1);ci.src=reader.result;modal.classList.add('show');modal.setAttribute('aria-hidden','false');
      requestAnimationFrame(photoCropLayout);
    };img.onerror=function(){photoCropCancel(true)};img.src=reader.result;
  };
@@ -1730,12 +1737,13 @@ function photoCropLayout(){
  const st=photoCropState;if(!st.img)return;const vp=document.getElementById('photoCropViewport');const ci=document.getElementById('photoCropImage');if(!vp||!ci)return;
  const vw=vp.clientWidth,vh=vp.clientHeight,iw=st.img.naturalWidth||st.img.width,ih=st.img.naturalHeight||st.img.height;
  st.baseScale=Math.max(vw/iw,vh/ih);const scale=st.baseScale*st.zoom;const rw=iw*scale,rh=ih*scale;const maxX=Math.max(0,(rw-vw)/2),maxY=Math.max(0,(rh-vh)/2);st.offsetX=Math.max(-maxX,Math.min(maxX,st.offsetX));st.offsetY=Math.max(-maxY,Math.min(maxY,st.offsetY));
- ci.style.width=rw+'px';ci.style.height=rh+'px';ci.style.transform=`translate(calc(-50% + ${st.offsetX}px),calc(-50% + ${st.offsetY}px)) rotate(${st.angle}deg)`;}
+ ci.style.width=rw+'px';ci.style.height=rh+'px';ci.style.transform=`translate(calc(-50% + ${st.offsetX}px),calc(-50% + ${st.offsetY}px)) rotate(${st.angle}deg)`;
+}
 function photoCropSetZoom(v){photoCropState.zoom=Math.max(1,Math.min(3,Number(v)||1));photoCropLayout()}
 function photoCropSetAngle(v){photoCropState.angle=Math.max(-180,Math.min(180,Number(v)||0));photoCropLayout()}
-function photoCropCancel(silent){const st=photoCropState;const modal=document.getElementById('photoCropModal');if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true')}if(st.input&&!silent){try{st.input.value=''}catch(_){}}photoCropState.key='';photoCropState.input=null;photoCropState.img=null;state.photoBusy=Math.max(0,(state.photoBusy||1)-1)}
+function photoCropCancel(silent){const st=photoCropState;const modal=document.getElementById('photoCropModal');if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true')}if(st.input&&!silent){try{st.input.value=''}catch(_){}}photoCropState.key='';photoCropState.input=null;photoCropState.img=null;photoCropState.pointers.clear();state.photoBusy=Math.max(0,(state.photoBusy||1)-1)}
 function photoCropApply(){
- const st=photoCropState;if(!st.img)return;const vp=document.getElementById('photoCropViewport');const iw=st.img.naturalWidth||st.img.width,ih=st.img.naturalHeight||st.img.height,vw=vp.clientWidth,vh=vp.clientHeight;const scale=st.baseScale*st.zoom;const outH=900;const outW=Math.max(1,Math.round(outH*st.aspect));const outScale=outH/vh;const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;const ctx=canvas.getContext('2d',{alpha:false});if(!ctx){photoCropCancel(true);return}ctx.translate(outW/2+st.offsetX*outScale,outH/2+st.offsetY*outScale);ctx.rotate(st.angle*Math.PI/180);ctx.scale(scale*outScale,scale*outScale);ctx.drawImage(st.img,-iw/2,-ih/2);const data=canvas.toDataURL('image/jpeg',0.78);const key=st.key;state[key]=data;const input=st.input;const box=input?.parentElement;if(box){const old=box.querySelector('img');if(old)old.remove();const im=document.createElement('img');im.src=data;box.appendChild(im);const plus=box.querySelector('span');if(plus)plus.style.display='none'}const modal=document.getElementById('photoCropModal');modal.classList.remove('show');modal.setAttribute('aria-hidden','true');photoCropState.key='';photoCropState.input=null;photoCropState.img=null;state.photoBusy=Math.max(0,(state.photoBusy||1)-1);
+ const st=photoCropState;if(!st.img)return;const vp=document.getElementById('photoCropViewport');const iw=st.img.naturalWidth||st.img.width,ih=st.img.naturalHeight||st.img.height,vw=vp.clientWidth,vh=vp.clientHeight;const scale=st.baseScale*st.zoom;const outH=900;const outW=Math.max(1,Math.round(outH*st.aspect));const outScale=outH/vh;const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;const ctx=canvas.getContext('2d',{alpha:false});if(!ctx){photoCropCancel(true);return}ctx.translate(outW/2+st.offsetX*outScale,outH/2+st.offsetY*outScale);ctx.rotate(st.angle*Math.PI/180);ctx.scale(scale*outScale,scale*outScale);ctx.drawImage(st.img,-iw/2,-ih/2);const data=canvas.toDataURL('image/jpeg',0.78);const key=st.key;state[key]=data;const input=st.input;const box=input?.parentElement;if(box){const old=box.querySelector('img');if(old)old.remove();const im=document.createElement('img');im.src=data;box.appendChild(im);const plus=box.querySelector('span');if(plus)plus.style.display='none'}const modal=document.getElementById('photoCropModal');modal.classList.remove('show');modal.setAttribute('aria-hidden','true');photoCropState.key='';photoCropState.input=null;photoCropState.img=null;photoCropState.pointers.clear();state.photoBusy=Math.max(0,(state.photoBusy||1)-1);
 }
 function bindPhotos(){
  document.querySelectorAll('[data-photo]').forEach(function(inp){
@@ -1743,10 +1751,23 @@ function bindPhotos(){
    inp.addEventListener('change',function(e){const f=e.target.files&&e.target.files[0];if(!f)return;state.photoBusy=(state.photoBusy||0)+1;photoCropOpen(e.target.dataset.photo,e.target,f);});
  });
 }
-document.getElementById('photoCropZoom').addEventListener('input',e=>photoCropSetZoom(e.target.value));document.getElementById('photoCropAngle').addEventListener('input',e=>photoCropSetAngle(e.target.value));
 document.getElementById('photoCropCancel').addEventListener('click',()=>photoCropCancel(false));
 document.getElementById('photoCropApply').addEventListener('click',photoCropApply);
-const cropVp=document.getElementById('photoCropViewport');cropVp.addEventListener('pointerdown',e=>{const st=photoCropState;if(!st.img)return;st.drag=true;st.lastX=e.clientX;st.lastY=e.clientY;try{cropVp.setPointerCapture(e.pointerId)}catch(_){} });cropVp.addEventListener('pointermove',e=>{const st=photoCropState;if(!st.drag)return;st.offsetX+=e.clientX-st.lastX;st.offsetY+=e.clientY-st.lastY;st.lastX=e.clientX;st.lastY=e.clientY;photoCropLayout()});cropVp.addEventListener('pointerup',e=>{photoCropState.drag=false;try{cropVp.releasePointerCapture(e.pointerId)}catch(_){} });cropVp.addEventListener('pointercancel',()=>photoCropState.drag=false);
+const cropVp=document.getElementById('photoCropViewport');
+function cropDistance(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)}
+function cropAngle(a,b){return Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX)}
+cropVp.addEventListener('pointerdown',e=>{
+ const st=photoCropState;if(!st.img)return;st.pointers.set(e.pointerId,e);try{cropVp.setPointerCapture(e.pointerId)}catch(_){}
+ if(st.pointers.size===1){st.drag=true;st.lastX=e.clientX;st.lastY=e.clientY;}
+ if(st.pointers.size===2){const pts=[...st.pointers.values()];st.drag=false;st.pinchStartDist=cropDistance(pts[0],pts[1]);st.pinchStartZoom=st.zoom;st.pinchStartAngle=cropAngle(pts[0],pts[1]);st.gestureStartAngle=st.angle;}
+});
+cropVp.addEventListener('pointermove',e=>{
+ const st=photoCropState;if(!st.img||!st.pointers.has(e.pointerId))return;st.pointers.set(e.pointerId,e);
+ if(st.pointers.size===1&&st.drag){st.offsetX+=e.clientX-st.lastX;st.offsetY+=e.clientY-st.lastY;st.lastX=e.clientX;st.lastY=e.clientY;photoCropLayout();}
+ else if(st.pointers.size===2){const pts=[...st.pointers.values()];const dist=cropDistance(pts[0],pts[1]);const ratio=st.pinchStartDist?dist/st.pinchStartDist:1;st.zoom=Math.max(1,Math.min(3,st.pinchStartZoom*ratio));const da=cropAngle(pts[0],pts[1])-st.pinchStartAngle;st.angle=st.gestureStartAngle+da*180/Math.PI;photoCropLayout();}
+});
+function cropPointerEnd(e){const st=photoCropState;st.pointers.delete(e.pointerId);try{cropVp.releasePointerCapture(e.pointerId)}catch(_){};if(st.pointers.size===1){const p=[...st.pointers.values()][0];st.drag=true;st.lastX=p.clientX;st.lastY=p.clientY;}else st.drag=false;}
+cropVp.addEventListener('pointerup',cropPointerEnd);cropVp.addEventListener('pointercancel',cropPointerEnd);cropVp.addEventListener('pointerleave',()=>{});
 
 document.querySelectorAll('[data-report-reason]').forEach(b=>b.addEventListener('click',()=>{state.reportReason=b.dataset.reportReason;document.querySelectorAll('[data-report-reason]').forEach(x=>x.classList.toggle('active',x===b))}));
 document.querySelector('[data-report-cancel]')?.addEventListener('click',closePocalogReport);
