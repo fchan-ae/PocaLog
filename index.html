@@ -930,8 +930,15 @@ async function syncCollectionToCloud(){
       payload.back_path=entry.item.__cloudBackPath||'';
       rows.push(payload);
     }
-    if(rows.length){
-      const {error}=await supabaseClient.from('pocalog_user_items').upsert(rows,{onConflict:'user_id,item_id'});
+    /* カード・グッズと辞書を分離して保存する。辞書保存の失敗でカード全体が保存されないことを防ぐ。 */
+    const itemRows=rows.filter(r=>r.item_type==='card'||r.item_type==='goods');
+    const dictionaryRows=rows.filter(r=>r.item_type==='dictionary');
+    if(itemRows.length){
+      const {error}=await supabaseClient.from('pocalog_user_items').upsert(itemRows,{onConflict:'user_id,item_id'});
+      if(error)throw error;
+    }
+    if(dictionaryRows.length){
+      const {error}=await supabaseClient.from('pocalog_user_items').upsert(dictionaryRows,{onConflict:'user_id,item_id'});
       if(error)throw error;
     }
     /* カード本体を先に保存し、画像アップロード失敗でカード全体が未保存になることを防ぐ。 */
