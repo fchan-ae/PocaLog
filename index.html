@@ -1007,7 +1007,7 @@ async function loadCollectionFromCloud(){
       item.back=await signedCloudImage(row.back_path);
       if(row.item_type==='goods')goods.push(item);else cards.push(item);
     }
-    db.cards=cards;db.goods=goods;saveDB();
+    db.cards=sortByRegisteredTime(cards);db.goods=sortByRegisteredTime(goods);saveDB();
     return {ok:true,found:true};
   }catch(err){
     console.warn('PocaLog cloud load error:',err);
@@ -1227,7 +1227,21 @@ async function confirmEncyclopediaChoice(yes){const p=state.encyclopediaPending;
 function openSearch(){state.search.type=state.type||'card';renderSearch();document.getElementById('searchPanel').classList.add('show')}
 function closeSearch(){document.getElementById('searchPanel').classList.remove('show')}
 function searchTokens(text){return String(text||'').trim().toLocaleLowerCase('ja-JP').split(/[+\s]+/).map(v=>v.trim()).filter(Boolean)}
-function sortItems(a){const arr=[...a];if(state.sort==='az')arr.sort((a,b)=>{const ka=a.member?a.member+' '+(a.album||''):a.name||a.category||'';const kb=b.member?b.member+' '+(b.album||''):b.name||b.category||'';return String(ka).localeCompare(String(kb),'ja')});else if(state.sort==='qty-desc')arr.sort((a,b)=>(Number(b.qty)||0)-(Number(a.qty)||0));else if(state.sort==='qty-asc')arr.sort((a,b)=>(Number(a.qty)||0)-(Number(b.qty)||0));return arr}
+function registeredTime(item){
+  const n=Number(item?.createdAt||item?.created_at||0);
+  if(Number.isFinite(n)&&n>0)return n;
+  const m=String(item?.id||'').match(/^[cg]_(\d+)$/);
+  return m?Number(m[1]):0;
+}
+function sortByRegisteredTime(a){return [...a].sort((x,y)=>registeredTime(y)-registeredTime(x))}
+function sortItems(a){
+  const arr=[...a];
+  if(state.sort==='registered')arr.sort((a,b)=>registeredTime(b)-registeredTime(a));
+  else if(state.sort==='az')arr.sort((a,b)=>{const ka=a.member?a.member+' '+(a.album||''):a.name||a.category||'';const kb=b.member?b.member+' '+(b.album||''):b.name||b.category||'';return String(ka).localeCompare(String(kb),'ja')});
+  else if(state.sort==='qty-desc')arr.sort((a,b)=>(Number(b.qty)||0)-(Number(a.qty)||0));
+  else if(state.sort==='qty-asc')arr.sort((a,b)=>(Number(a.qty)||0)-(Number(b.qty)||0));
+  return arr
+}
 function filteredCards(){
  const q=state.search||{}; const detail=hasActiveDetailSearch(); let a=detail?[...db.cards]:db.cards.filter(c=>c.group===state.group);
  if(!detail){const memberFilter=state.member;if(memberFilter&&memberFilter!=='ALL')a=a.filter(c=>c.member===memberFilter)}
@@ -1240,7 +1254,7 @@ function filteredCards(){
  if(q.visualLength)a=a.filter(c=>(c.visual||[]).some(v=>String(v)===String(q.visualLength)));
  if(q.visualAccessory)a=a.filter(c=>(c.visual||[]).some(v=>String(v)===String(q.visualAccessory)));
  if(q.status)a=a.filter(c=>String(c.status||'')===String(q.status));
- const tokens=searchTokens(q.text); if(tokens.length)a=a.filter(c=>{const hay=[c.nickname||'',c.member||'',c.album||'',c.event||c.venue||'',c.tag||'',...(c.visual||[]),c.status||'',c.shop||''].join(' ').toLocaleLowerCase('ja-JP');return tokens.every(token=>hay.includes(token));});
+ const tokens=searchTokens(q.text); if(tokens.length)a=a.filter(c=>{const hay=[c.group||'',c.nickname||'',c.member||'',c.album||'',c.event||c.venue||'',c.tag||'',...(c.visual||[])].join(' ').toLocaleLowerCase('ja-JP');return tokens.every(token=>hay.includes(token));});
  return sortItems(a)
 }
 function filteredGoods(){
@@ -1250,7 +1264,7 @@ function filteredGoods(){
  if(q.member&&q.member!=='ALL')a=a.filter(g=>String(g.member||'OTHER')===String(q.member));
  if(q.goodsCategory)a=a.filter(g=>String(g.category||'')===String(q.goodsCategory));
  if(q.status)a=a.filter(g=>String(g.status||'')===String(q.status));
- const tokens=searchTokens(q.text); if(tokens.length)a=a.filter(g=>{const hay=[g.name||'',g.category||'',g.member||'OTHER',g.status||'',g.shop||''].join(' ').toLocaleLowerCase('ja-JP');return tokens.every(token=>hay.includes(token));});
+ const tokens=searchTokens(q.text); if(tokens.length)a=a.filter(g=>{const hay=[g.group||'',g.name||'',g.category||'',g.member||'OTHER'].join(' ').toLocaleLowerCase('ja-JP');return tokens.every(token=>hay.includes(token));});
  return sortItems(a)
 }
 function hasActiveDetailSearch(){const q=state.search||{};return !!(String(q.text||'').trim()||q.group||(q.member&&q.member!=='ALL')||q.album||q.event||q.classTag||q.visualHair||q.visualLength||q.visualAccessory||q.goodsCategory||q.status)}
@@ -1784,7 +1798,7 @@ function saveCard(cont){
   }
 
   const c={
-    id:'c_'+Date.now(),group:state.regGroup,member:state.regMember,nickname:String(state.regNickname||'').trim(),album:state.regAlbum,
+    id:'c_'+Date.now(),createdAt:Date.now(),group:state.regGroup,member:state.regMember,nickname:String(state.regNickname||'').trim(),album:state.regAlbum,
     event:state.regEvent,shop:state.regShop||'',tag:state.regClass,visual:[...state.regVisual],
     status:state.regStatus,qty:state.regStatus==='owned'?state.regQty:0,wish:false,like:false,
     front:state.front||'',back:state.back||'',memo:state.memo,encyclopediaId:null
@@ -1797,7 +1811,7 @@ function saveCard(cont){
   }
   openEncyclopediaChoice(c,'card',cont);
 }
-function saveGoods(){const name=document.getElementById('goodsName').value.trim();if(!name){toast('グッズ名を入力してください');return}if(state.editGoodsId){const g=db.goods.find(x=>x.id===state.editGoodsId);if(!g)return;g.group=state.goodsGroup;g.member=state.goodsMember||'OTHER';g.name=name;g.category=document.getElementById('goodsCategory').value;g.status=state.goodsStatus;g.qty=state.goodsStatus==='owned'?state.goodsQty:0;g.front=state.goodsFront;g.back=state.goodsBack;g.memo=document.getElementById('goodsMemo').value;saveDB();const id=g.id;state.editGoodsId=null;if(g.encyclopediaId){syncEncyclopediaItem(g,'goods').then(function(ok){if(ok)toast('変更を保存しました（図鑑も更新）');else toast('変更を保存しました')})}else{toast('変更を保存しました')}state.selected=id;state.group=g.group;go('goodsDetail');return}const g={id:'g_'+Date.now(),group:state.goodsGroup,member:state.goodsMember||'OTHER',name,category:document.getElementById('goodsCategory').value,status:state.goodsStatus,qty:state.goodsStatus==='owned'?state.goodsQty:0,wish:false,like:false,front:state.goodsFront,back:state.goodsBack,memo:document.getElementById('goodsMemo').value,encyclopediaId:null};db.goods.unshift(g);saveDB();openEncyclopediaChoice(g,'goods',false)}
+function saveGoods(){const name=document.getElementById('goodsName').value.trim();if(!name){toast('グッズ名を入力してください');return}if(state.editGoodsId){const g=db.goods.find(x=>x.id===state.editGoodsId);if(!g)return;g.group=state.goodsGroup;g.member=state.goodsMember||'OTHER';g.name=name;g.category=document.getElementById('goodsCategory').value;g.status=state.goodsStatus;g.qty=state.goodsStatus==='owned'?state.goodsQty:0;g.front=state.goodsFront;g.back=state.goodsBack;g.memo=document.getElementById('goodsMemo').value;saveDB();const id=g.id;state.editGoodsId=null;if(g.encyclopediaId){syncEncyclopediaItem(g,'goods').then(function(ok){if(ok)toast('変更を保存しました（図鑑も更新）');else toast('変更を保存しました')})}else{toast('変更を保存しました')}state.selected=id;state.group=g.group;go('goodsDetail');return}const g={id:'g_'+Date.now(),createdAt:Date.now(),group:state.goodsGroup,member:state.goodsMember||'OTHER',name,category:document.getElementById('goodsCategory').value,status:state.goodsStatus,qty:state.goodsStatus==='owned'?state.goodsQty:0,wish:false,like:false,front:state.goodsFront,back:state.goodsBack,memo:document.getElementById('goodsMemo').value,encyclopediaId:null};db.goods.unshift(g);saveDB();openEncyclopediaChoice(g,'goods',false)}
 const photoCropState={key:'',input:null,img:null,baseScale:1,zoom:1,angle:0,offsetX:0,offsetY:0,aspect:55/86,drag:false,lastX:0,lastY:0,pointers:new Map(),pinchStartDist:0,pinchStartZoom:1,pinchStartAngle:0,gestureStartAngle:0};
 function photoCropOpen(key,input,file){
  const reader=new FileReader();
