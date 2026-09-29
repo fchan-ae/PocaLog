@@ -783,7 +783,7 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ERvfxPo4K2MAlJiqhiuTxQ_mhMVo6c8
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const CLOUD_BUCKET='pocalog-user-media';
 /* 公開版セーフティ機能：Supabase側の準備完了後に true にします。 */
-const PUBLIC_SAFETY_GATE_ENABLED=true;
+const PUBLIC_SAFETY_GATE_ENABLED=false;
 const cloudState={user:null,ready:false,syncing:false,timer:null,syncRequested:false};
 
 async function ensureCloudUser(){
@@ -848,7 +848,7 @@ async function registerPocaAccount(){
    }
    cloudState.user=user;cloudState.ready=true;
    const code=randomRecoveryCode(); await storeRecoveryCode(code);
-   db.profile.id=id;localStorage.setItem('pocalog_last_id',id);saveDB();await saveCloudProfile();
+   db.profile.id=id;localStorage.setItem('pocalog_last_id',id);loadAccountLocalBackup();saveDB();await saveCloudProfile();
    await syncCollectionToCloud();
    document.getElementById('accountRecoveryCodeDisplay').textContent=code; accountModal('code');
    updateCloudStatus('同期済み'); render();
@@ -859,8 +859,9 @@ async function loginPocaAccount(){
  if(!validPocaId(id)||!pw){accountError('PocaLog IDとパスワードを入力してください。');return}
  try{
    const {data,error}=await supabaseClient.auth.signInWithPassword({email:pocaEmail(id),password:pw}); if(error)throw error;
-   cloudState.user=data.user;cloudState.ready=true;db.profile.id=id;localStorage.setItem('pocalog_last_id',id);saveDB();
+   cloudState.user=data.user;cloudState.ready=true;db.profile.id=id;localStorage.setItem('pocalog_last_id',id);loadAccountLocalBackup();saveDB();
    await loadCloudProfile(); const had=await loadCollectionFromCloud(); if(!had)await syncCollectionToCloud();
+   saveAccountLocalBackup();
    closeAccountModal();updateCloudStatus('同期済み');render();toast('データを復元しました',1800);
  }catch(err){console.error(err);accountError('IDまたはパスワードが違います。')}
 }
@@ -1019,9 +1020,12 @@ async function initCloudAccount(){
     accountModal('login');
     return;
   }
+  loadAccountLocalBackup();
   await loadCloudProfile();
   const hadCloud=await loadCollectionFromCloud();
   if(!hadCloud)await syncCollectionToCloud();
+  else await syncCollectionToCloud();
+  saveAccountLocalBackup();
   updateCloudStatus('同期済み');
   render();
 }
@@ -1085,9 +1089,37 @@ const GOODS_TAGS=['アクスタ','ぬいぐるみ','キーリング','ファン�
 let db=loadDB();
 let state={screen:'home',history:[],group:'aespa',member:'ALL',type:'card',view:'2',sort:'registered',selected:null,regGroup:'aespa',regMember:'KARINA',regNickname:'',regAlbum:'Armageddon',regEvent:'',regShop:'',regClass:'封入',regStatus:'owned',regQty:1,regVisual:[],front:'',back:'',memo:'',goodsGroup:'aespa',goodsMember:'KARINA',goodsStatus:'owned',goodsQty:1,goodsFront:'',goodsBack:'',dictType:'アルバム・作品',dictGroup:'aespa',dictDraft:[],dictSort:'registered',deleteTarget:null,editCardId:null,editGoodsId:null,search:{text:'',group:'',member:'',album:'',event:'',classTag:'',visual:'',visualHair:'',visualLength:'',visualAccessory:'',visualTab:'hair',status:'',type:'card',goodsCategory:''},profile:{nickname:'',id:''},feedType:{wish:'all',like:'all'},zukanGroup:'ALL',zukanMember:'ALL',zukanType:'card',zukanQuery:'',sharedEncyclopediaItem:null,detailReadonly:false,regDictAddType:'',encyclopediaPending:null,dictEditIndex:null,dictEditOld:'',dictEditType:'',reportTargetId:null,reportReason:''};
 function loadDB(){try{const x=JSON.parse(localStorage.getItem('pocalogu_figma_v2'));if(x){const demoCards=Array.isArray(x.cards)&&x.cards.length>0&&x.cards.every(c=>/^c_.+_\d+_\d+$/.test(String(c.id||'')));const demoGoods=Array.isArray(x.goods)&&x.goods.length>0&&x.goods.every(g=>/^g_.+_[12]$/.test(String(g.id||'')));if(demoCards&&demoGoods){x.cards=[];x.goods=[]}(x.cards||[]).forEach(c=>{c.nickname=c.nickname||'';c.visual=Array.isArray(c.visual)?c.visual:[]});(x.goods||[]).forEach(g=>{g.front=g.front||g.photo||'';g.back=g.back||'';g.member=g.member||'OTHER'});x.dictByGroup=x.dictByGroup||{};x.dictCommon=x.dictCommon||{};x.albumMeta=x.albumMeta||{};x.profile=x.profile||{nickname:'',id:''};x.profileRegistry=x.profileRegistry||{nicknames:[],ids:[]};if(x.profile.nickname&&!x.profileRegistry.nicknames.includes(x.profile.nickname))x.profileRegistry.nicknames.push(x.profile.nickname);if(x.profile.id&&!x.profileRegistry.ids.includes(x.profile.id))x.profileRegistry.ids.push(x.profile.id);const commonTypes=['ショップ','カード仕様・種別','キービジュアル・髪色','キービジュアル・長さ','キービジュアル・小物','グッズ分類タグ'];commonTypes.forEach(type=>{const merged=[];Object.values(x.dictByGroup).forEach(g=>{(g?.[type]||[]).forEach(v=>{if(!merged.includes(v))merged.push(v)})});if(!merged.length){if(type==='ショップ')merged.push(...COMMON_SHOPS);if(type==='カード仕様・種別')merged.push(...CLASS_TAGS);if(type==='キービジュアル・髪色')merged.push('黒髪','金髪','茶髪','銀髪','赤髪','青髪');if(type==='キービジュアル・長さ')merged.push('ショート','ボブ','ミディアム','ロング');if(type==='キービジュアル・小物')merged.push('メガネ','サングラス','帽子','ヘッドホン','リボン');if(type==='グッズ分類タグ')merged.push(...GOODS_TAGS)}if(type==='ショップ')COMMON_SHOPS.forEach(v=>{if(!merged.includes(v))merged.push(v)});if(type==='グッズ分類タグ')GOODS_TAGS.forEach(v=>{if(!merged.includes(v))merged.push(v)});x.dictCommon[type]=merged});if(x.dictCommon['キービジュアル']&&x.dictCommon['キービジュアル'].length){const old=x.dictCommon['キービジュアル'];x.dictCommon['キービジュアル・髪色']=Array.from(new Set([...(x.dictCommon['キービジュアル・髪色']||[]),...old.filter(v=>['黒髪','金髪','茶髪','銀髪','赤髪','青髪'].includes(v))]));x.dictCommon['キービジュアル・長さ']=Array.from(new Set([...(x.dictCommon['キービジュアル・長さ']||[]),...old.filter(v=>['ショート','ボブ','ミディアム','ロング'].includes(v))]));x.dictCommon['キービジュアル・小物']=Array.from(new Set([...(x.dictCommon['キービジュアル・小物']||[]),...old.filter(v=>!['黒髪','金髪','茶髪','銀髪','赤髪','青髪','ショート','ボブ','ミディアム','ロング'].includes(v))]));delete x.dictCommon['キービジュアル']}Object.entries(GROUPS).forEach(([gid,g])=>{x.dictByGroup[gid]=x.dictByGroup[gid]||{};x.dictByGroup[gid]['メンバー']=x.dictByGroup[gid]['メンバー']||[...g.members];if(!x.dictByGroup[gid]['メンバー'].includes('OTHER'))x.dictByGroup[gid]['メンバー'].push('OTHER');x.dictByGroup[gid]['アルバム・作品']=x.dictByGroup[gid]['アルバム・作品']||[];GROUP_ALBUMS[gid].forEach(v=>{if(!x.dictByGroup[gid]['アルバム・作品'].includes(v))x.dictByGroup[gid]['アルバム・作品'].push(v)});if(gid==='aespa'){x.dictByGroup[gid]['イベント・会場']=x.dictByGroup[gid]['イベント・会場']||[];AESPA_EVENTS.forEach(v=>{if(!x.dictByGroup[gid]['イベント・会場'].includes(v))x.dictByGroup[gid]['イベント・会場'].push(v)});x.albumMeta.aespa=x.albumMeta.aespa||{};Object.entries(AESPA_ALBUM_DATES).forEach(([k,v])=>{x.albumMeta.aespa[k]=v})}x.dictByGroup[gid]['イベント・会場']=x.dictByGroup[gid]['イベント・会場']||['POP-UP','東京ドーム','LIVE TOUR']});return x}}catch(e){};const cards=[];const goods=[];const dictByGroup={};Object.entries(GROUPS).forEach(([gid,g])=>{dictByGroup[gid]={'メンバー':[...g.members,'OTHER'],'アルバム・作品':[...(GROUP_ALBUMS[gid]||ALBUMS)],'イベント・会場':gid==='aespa'?[...AESPA_EVENTS]:['POP-UP','東京ドーム','LIVE TOUR']}});const dictCommon={'ショップ':[...COMMON_SHOPS],'カード仕様・種別':[...CLASS_TAGS],'キービジュアル・髪色':['黒髪','金髪','茶髪','茶髪','銀髪','赤髪','青髪'],'キービジュアル・長さ':['ショート','ボブ','ミディアム','ロング'],'キービジュアル・小物':['メガネ','サングラス','帽子','ヘッドホン','リボン'],'グッズ分類タグ':[...GOODS_TAGS]};return{cards,goods,dictByGroup,dictCommon,albumMeta:{aespa:{...AESPA_ALBUM_DATES}},profile:{nickname:'',id:''},profileRegistry:{nicknames:[],ids:[]}}}
+function accountBackupKey(){
+  const id=String(db?.profile?.id||localStorage.getItem('pocalog_last_id')||'').trim().toLowerCase();
+  return id ? `pocalog_account_backup_${id}` : '';
+}
+function saveAccountLocalBackup(){
+  try{
+    const key=accountBackupKey();
+    if(!key)return;
+    localStorage.setItem(key,JSON.stringify({dictByGroup:db.dictByGroup||{},dictCommon:db.dictCommon||{},albumMeta:db.albumMeta||{},cards:db.cards||[],goods:db.goods||[],profile:db.profile||{nickname:'',id:''},savedAt:Date.now()}));
+  }catch(err){console.warn('PocaLog account local backup error:',err)}
+}
+function loadAccountLocalBackup(){
+  try{
+    const key=accountBackupKey();
+    if(!key)return false;
+    const raw=localStorage.getItem(key);
+    if(!raw)return false;
+    const x=JSON.parse(raw);
+    if(x.dictByGroup)db.dictByGroup=x.dictByGroup;
+    if(x.dictCommon)db.dictCommon=x.dictCommon;
+    if(x.albumMeta)db.albumMeta=x.albumMeta;
+    if(Array.isArray(x.cards)&&x.cards.length)db.cards=x.cards;
+    if(Array.isArray(x.goods)&&x.goods.length)db.goods=x.goods;
+    if(x.profile?.nickname)db.profile.nickname=x.profile.nickname;
+    return true;
+  }catch(err){console.warn('PocaLog account local restore error:',err);return false}
+}
 function saveDB(){
   try{
     localStorage.setItem('pocalogu_figma_v2',JSON.stringify(db));
+    saveAccountLocalBackup();
     queueCloudSync();
     return true;
   }catch(err){
@@ -1325,17 +1357,9 @@ function encyclopediaPayload(item,type){
 async function shareEncyclopediaItem(item,type){
  try{
    const payload=encyclopediaPayload(item,type);
-   if(PUBLIC_SAFETY_GATE_ENABLED){
-     const {data,error}=await supabaseClient.functions.invoke('pocalog-publish-encyclopedia',{body:{item,payload,type}});
-     if(error)throw error;
-     if(!data?.ok){toast(data?.message||'公開チェックに通りませんでした',2400);return false;}
-     if(data?.id)item.encyclopediaId=data.id;
-   }else{
-     /* 公開版セーフティ機能のセットアップ中は従来の登録方式を維持します。 */
-     const {data,error}=await supabaseClient.from('pocalog_encyclopedia').insert(payload).select('id').single();
-     if(error)throw error;
-     if(data?.id)item.encyclopediaId=data.id;
-   }
+   const {data,error}=await supabaseClient.from('pocalog_encyclopedia').insert(payload).select('id').single();
+   if(error)throw error;
+   if(data?.id)item.encyclopediaId=data.id;
    saveDB();
    return true;
  }catch(err){console.error('PocaLog encyclopedia save error:',err);return false}
@@ -1345,19 +1369,20 @@ async function manageEncyclopediaItem(action,item,type){
   try{
     if(!item?.encyclopediaId)return false;
     const payload=encyclopediaPayload(item,type);
-    const {data,error}=await supabaseClient.functions.invoke('pocalog-manage-encyclopedia',{body:{action,id:item.encyclopediaId,item,payload,type}});
+    if(action==='delete'){
+      const {error}=await supabaseClient.from('pocalog_encyclopedia').delete().eq('id',item.encyclopediaId);
+      if(error)throw error;
+      return true;
+    }
+    const {data,error}=await supabaseClient.from('pocalog_encyclopedia').update(payload).eq('id',item.encyclopediaId).select('id').limit(1);
     if(error)throw error;
-    if(!data?.ok)return false;
-    return true;
+    return !!data?.[0]?.id;
   }catch(err){console.error('PocaLog encyclopedia manage error:',err);return false}
 }
 
 async function syncEncyclopediaItem(item,type){
   try{
     if(!item||!item.encyclopediaId)return false;
-    if(PUBLIC_SAFETY_GATE_ENABLED){
-      return await manageEncyclopediaItem('update',item,type);
-    }
     const payload=encyclopediaPayload(item,type);
     const {data,error}=await supabaseClient.from('pocalog_encyclopedia').update(payload).eq('id',item.encyclopediaId).select('id').limit(1);
     if(error){console.error('PocaLog encyclopedia update error:',error);return false;}
@@ -1369,9 +1394,6 @@ async function syncEncyclopediaItem(item,type){
 async function deleteEncyclopediaItem(item){
   try{
     if(!item?.encyclopediaId)return true;
-    if(PUBLIC_SAFETY_GATE_ENABLED){
-      return await manageEncyclopediaItem('delete',item,'card');
-    }
     const {error}=await supabaseClient.from('pocalog_encyclopedia').delete().eq('id',item.encyclopediaId);
     if(error){console.error('PocaLog encyclopedia delete error:',error);return false;}
     return true;
