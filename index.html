@@ -1195,8 +1195,10 @@ async function confirmEncyclopediaChoice(yes){const p=state.encyclopediaPending;
 function openSearch(){state.search.type=state.type||'card';renderSearch();document.getElementById('searchPanel').classList.add('show')}
 function closeSearch(){document.getElementById('searchPanel').classList.remove('show')}
 function searchTokens(text){return String(text||'').trim().toLocaleLowerCase('ja-JP').split(/[+\s]+/).map(v=>v.trim()).filter(Boolean)}
+function sortItems(a){const arr=[...a];if(state.sort==='az')arr.sort((a,b)=>{const ka=a.member?a.member+' '+(a.album||''):a.name||a.category||'';const kb=b.member?b.member+' '+(b.album||''):b.name||b.category||'';return String(ka).localeCompare(String(kb),'ja')});else if(state.sort==='qty-desc')arr.sort((a,b)=>(Number(b.qty)||0)-(Number(a.qty)||0));else if(state.sort==='qty-asc')arr.sort((a,b)=>(Number(a.qty)||0)-(Number(b.qty)||0));return arr}
 function filteredCards(){
- const q=state.search||{}; let a=[...db.cards];
+ const q=state.search||{}; const detail=hasActiveDetailSearch(); let a=detail?[...db.cards]:db.cards.filter(c=>c.group===state.group);
+ if(!detail){const memberFilter=state.member;if(memberFilter&&memberFilter!=='ALL')a=a.filter(c=>c.member===memberFilter)}
  if(q.group)a=a.filter(c=>String(c.group||'')===String(q.group));
  if(q.member&&q.member!=='ALL')a=a.filter(c=>String(c.member||'')===String(q.member));
  if(q.album)a=a.filter(c=>String(c.album||'')===String(q.album));
@@ -1210,7 +1212,8 @@ function filteredCards(){
  return sortItems(a)
 }
 function filteredGoods(){
- const q=state.search||{}; let a=[...db.goods];
+ const q=state.search||{}; const detail=hasActiveDetailSearch(); let a=detail?[...db.goods]:db.goods.filter(g=>g.group===state.group);
+ if(!detail){const memberFilter=state.member;if(memberFilter&&memberFilter!=='ALL')a=a.filter(g=>(g.member||'OTHER')===memberFilter)}
  if(q.group)a=a.filter(g=>String(g.group||'')===String(q.group));
  if(q.member&&q.member!=='ALL')a=a.filter(g=>String(g.member||'OTHER')===String(q.member));
  if(q.goodsCategory)a=a.filter(g=>String(g.category||'')===String(q.goodsCategory));
