@@ -782,6 +782,7 @@ const SUPABASE_URL = 'https://vgygxqtrofbbifcktbmd.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ERvfxPo4K2MAlJiqhiuTxQ_mhMVo6c8';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const CLOUD_BUCKET='pocalog-user-media';
+const SHARED_IMAGE_BUCKET='pocalog-shared-images';
 /* 公開版セーフティ機能：Supabase側の準備完了後に true にします。 */
 const PUBLIC_SAFETY_GATE_ENABLED=false;
 const cloudState={user:null,ready:false,syncing:false,timer:null,syncRequested:false};
@@ -1422,6 +1423,39 @@ async function renderEncyclopedia(){
  }).join(''):'<div class="zukan-empty">条件に一致するカード・グッズがありません。</div>';
 }
 
+async function stableSharedImageUrl(source, side, itemId){
+  if(!source)return '';
+  const marker=`/storage/v1/object/public/${SHARED_IMAGE_BUCKET}/`;
+  if(String(source).includes(marker))return source;
+  if(!cloudState.user?.id)throw new Error('ログイン情報がありません');
+  const response=await fetch(source);
+  if(!response.ok)throw new Error('画像を読み込めません。カードの画像を再保存してから図鑑に登録してください');
+  const blob=await response.blob();
+  const ext=(blob.type||'image/jpeg').includes('png')?'png':(blob.type||'').includes('webp')?'webp':'jpg';
+  const path=`${cloudState.user.id}/${String(itemId||crypto.randomUUID())}-${side}-${crypto.randomUUID()}.${ext}`;
+  const {error}=await supabaseClient.storage.from(SHARED_IMAGE_BUCKET).upload(path,blob,{contentType:blob.type||'image/jpeg',upsert:false});
+  if(error)throw error;
+  const {data}=supabaseClient.storage.from(SHARED_IMAGE_BUCKET).getPublicUrl(path);
+  return data?.publicUrl||'';
+}
+async function stableEncyclopediaPayload(item,type){
+  const payload=encyclopediaPayload(item,type);
+  payload.image_url=await stableSharedImageUrl(item.front,'front',item.id);
+  payload.back_image_url=await stableSharedImageUrl(item.back,'back',item.id);
+  return payload;
+}
+async function deleteOwnedSharedImage(url){
+  try{
+    if(!url)return;
+    const marker=`/storage/v1/object/public/${SHARED_IMAGE_BUCKET}/`;
+    const i=String(url).indexOf(marker); if(i<0)return;
+    const path=decodeURIComponent(String(url).slice(i+marker.length).split('?')[0]);
+    const owner=path.split('/')[0];
+    if(owner!==cloudState.user?.id)return;
+    await supabaseClient.storage.from(SHARED_IMAGE_BUCKET).remove([path]);
+  }catch(e){console.warn('shared image cleanup failed',e)}
+}
+
 function encyclopediaPayload(item,type){
   const isGoods=type==='goods';
   const groupName=GROUPS[item.group]?.name||item.group||'';
@@ -1444,7 +1478,7 @@ function encyclopediaPayload(item,type){
 
 async function shareEncyclopediaItem(item,type){
  try{
-   const payload=encyclopediaPayload(item,type);
+   const payload=await stableEncyclopediaPayload(item,type);
    const {data,error}=await supabaseClient.from('pocalog_encyclopedia').insert(payload).select('id').single();
    if(error)throw error;
    if(data?.id)item.encyclopediaId=data.id;
@@ -1456,12 +1490,14 @@ async function shareEncyclopediaItem(item,type){
 async function manageEncyclopediaItem(action,item,type){
   try{
     if(!item?.encyclopediaId)return false;
-    const payload=encyclopediaPayload(item,type);
     if(action==='delete'){
+      const {data:oldRows}=await supabaseClient.from('pocalog_encyclopedia').select('image_url,back_image_url').eq('id',item.encyclopediaId).limit(1);
       const {error}=await supabaseClient.from('pocalog_encyclopedia').delete().eq('id',item.encyclopediaId);
+      if(!error&&oldRows?.[0]){await deleteOwnedSharedImage(oldRows[0].image_url);await deleteOwnedSharedImage(oldRows[0].back_image_url)}
       if(error)throw error;
       return true;
     }
+    const payload=await stableEncyclopediaPayload(item,type);
     const {data,error}=await supabaseClient.from('pocalog_encyclopedia').update(payload).eq('id',item.encyclopediaId).select('id').limit(1);
     if(error)throw error;
     return !!data?.[0]?.id;
@@ -1471,7 +1507,7 @@ async function manageEncyclopediaItem(action,item,type){
 async function syncEncyclopediaItem(item,type){
   try{
     if(!item||!item.encyclopediaId)return false;
-    const payload=encyclopediaPayload(item,type);
+    const payload=await stableEncyclopediaPayload(item,type);
     const {data,error}=await supabaseClient.from('pocalog_encyclopedia').update(payload).eq('id',item.encyclopediaId).select('id').limit(1);
     if(error){console.error('PocaLog encyclopedia update error:',error);return false;}
     if(data?.[0]?.id){item.encyclopediaId=data[0].id;saveDB();return true;}
@@ -1482,8 +1518,10 @@ async function syncEncyclopediaItem(item,type){
 async function deleteEncyclopediaItem(item){
   try{
     if(!item?.encyclopediaId)return true;
+    const {data:oldRows}=await supabaseClient.from('pocalog_encyclopedia').select('image_url,back_image_url').eq('id',item.encyclopediaId).limit(1);
     const {error}=await supabaseClient.from('pocalog_encyclopedia').delete().eq('id',item.encyclopediaId);
     if(error){console.error('PocaLog encyclopedia delete error:',error);return false;}
+    if(oldRows?.[0]){await deleteOwnedSharedImage(oldRows[0].image_url);await deleteOwnedSharedImage(oldRows[0].back_image_url)}
     return true;
   }catch(err){console.error('PocaLog encyclopedia delete error:',err);return false}
 }
